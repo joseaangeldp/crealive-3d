@@ -1,0 +1,181 @@
+/* ============================================================
+   src/pages/Home.css — Página principal
+   ============================================================ */
+
+/* ─── Carrusel ─── */
+.hero-carousel {
+    position: relative;
+    width: 100%;
+    height: 70vh;
+    min-height: 380px;
+    max-height: 600px;
+    overflow: hidden;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.carousel-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.65s cubic-bezier(0.77, 0, 0.18, 1);
+}
+
+.carousel-slide {
+    min-width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.carousel-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carousel-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.1) 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 0 48px 0;
+}
+
+.carousel-content {
+    padding: 0 32px;
+    max-width: 520px;
+    color: #fff;
+    animation: fadeIn 0.5s ease;
+}
+
+.carousel-label {
+    display: inline-block;
+    background: var(--color-wine);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 12px;
+    border-radius: var(--radius-full);
+    margin-bottom: 12px;
+}
+
+.carousel-title {
+    font-size: clamp(26px, 5vw, 42px);
+    color: #fff;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-desc {
+    font-size: 15px;
+    opacity: 0.9;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 18px;
+    right: 24px;
+    display: flex;
+    gap: 8px;
+}
+
+.carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.carousel-dot.active {
+    background: #fff;
+    width: 22px;
+    border-radius: 4px;
+}
+
+/* ─── Sección features ─── */
+.home-features {
+    background: var(--color-bg);
+}
+
+.section-title {
+    font-size: clamp(24px, 4vw, 34px);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.section-sub {
+    text-align: center;
+    color: var(--color-text-muted);
+    margin-bottom: 40px;
+    font-size: 15px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 20px;
+}
+
+.feature-card {
+    padding: 28px 24px;
+    text-align: center;
+}
+
+.feature-emoji {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.feature-card h3 {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.feature-card p {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+/* ─── CTA ─── */
+.home-cta {
+    padding: 48px 0;
+}
+
+.home-cta__inner {
+    background: linear-gradient(135deg, var(--color-wine) 0%, #d4809a 100%);
+    border-radius: var(--radius-xl);
+    padding: 52px 40px;
+    text-align: center;
+    color: #fff;
+}
+
+.home-cta__inner h2 {
+    color: #fff;
+    font-size: clamp(22px, 4vw, 32px);
+    margin-bottom: 10px;
+}
+
+.home-cta__inner p {
+    opacity: 0.88;
+    margin-bottom: 28px;
+}
+
+.home-cta__inner .btn-primary {
+    background: #fff;
+    color: var(--color-wine);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+}
+
+.home-cta__inner .btn-primary:hover {
+    background: rgba(255, 255, 255, 0.9);
+}

@@ -1,0 +1,60 @@
+/* src/pages/OrderConfirmation.css */
+.confirmation-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: linear-gradient(135deg, #FAFAF8 0%, #F5C6D820 100%);
+}
+
+.confirmation-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 48px 36px;
+    text-align: center;
+}
+
+.confirmation-icon {
+    font-size: 72px;
+    display: block;
+    margin-bottom: 20px;
+    line-height: 1;
+}
+
+.confirmation-title {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.confirmation-msg {
+    color: var(--color-text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.confirmation-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    text-align: left;
+}
+
+.confirmation-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.confirmation-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}

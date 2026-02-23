@@ -1,0 +1,54 @@
+/* ============================================================
+   src/components/BottomNav.css — Barra de navegación inferior (móvil)
+   ============================================================ */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--bottom-nav-h);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 300;
+    padding: 0 8px;
+    /* Solo en móvil */
+}
+
+@media (min-width: 769px) {
+    .bottom-nav {
+        display: none;
+    }
+}
+
+.bottom-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    transition: all var(--transition);
+    flex: 1;
+    text-align: center;
+}
+
+.bottom-nav__item svg {
+    font-size: 22px;
+}
+
+.bottom-nav__item.active {
+    color: var(--color-wine);
+    background: rgba(196, 118, 138, 0.08);
+}
+
+.bottom-nav__item:hover {
+    color: var(--color-wine);
+}

@@ -1,0 +1,90 @@
+/* src/pages/Profile.css */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.profile-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-wine), var(--color-pink));
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h2 {
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.profile-info p {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+.profile-logout {
+    margin-left: auto;
+    padding: 8px 18px;
+    font-size: 13px;
+}
+
+.profile-section-title {
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.pedidos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.pedido-card {
+    padding: 18px 20px;
+}
+
+.pedido-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 12px;
+}
+
+.pedido-nombre {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.pedido-fecha {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.pedido-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}

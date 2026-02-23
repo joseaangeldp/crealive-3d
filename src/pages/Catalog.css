@@ -1,0 +1,62 @@
+/* ============================================================
+   src/pages/Catalog.css
+   ============================================================ */
+.catalog-header {
+    background: linear-gradient(135deg, var(--color-blue) 0%, var(--color-pink) 100%);
+    padding: 48px 0 36px;
+    text-align: center;
+}
+
+.catalog-header h1 {
+    color: var(--color-text);
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.catalog-header p {
+    color: var(--color-text-muted);
+    font-size: 15px;
+}
+
+.category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 32px;
+}
+
+.cat-btn {
+    padding: 8px 18px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-white);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition: all var(--transition);
+    cursor: pointer;
+}
+
+.cat-btn:hover {
+    border-color: var(--color-wine);
+    color: var(--color-wine);
+}
+
+.cat-btn.active {
+    background: var(--color-wine);
+    border-color: var(--color-wine);
+    color: #fff;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 24px;
+}
+
+@media (max-width: 480px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+}

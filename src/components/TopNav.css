@@ -1,0 +1,80 @@
+/* ============================================================
+   src/components/TopNav.css — Barra de navegación superior
+   ============================================================ */
+.topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-h);
+    background: rgba(250, 250, 248, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--color-border);
+    z-index: 300;
+    display: none;
+}
+
+@media (min-width: 769px) {
+    .topnav {
+        display: flex;
+    }
+}
+
+.topnav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.topnav__logo {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-wine);
+    letter-spacing: -0.02em;
+}
+
+.topnav__logo span {
+    color: var(--color-text);
+    font-weight: 400;
+    font-size: 18px;
+}
+
+.topnav__links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+}
+
+.topnav__links a {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition: color var(--transition);
+    padding: 4px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.topnav__links a:hover,
+.topnav__links a.active {
+    color: var(--color-wine);
+    border-bottom-color: var(--color-wine);
+}
+
+.topnav__actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.topnav__user {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
