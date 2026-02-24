@@ -25,25 +25,7 @@ export default function ProductCustomizer({ producto, onClose }) {
         setEnviando(true)
 
         try {
-            // ── Paso 1: Guardar pedido en Supabase ──
-            const pedidoData = {
-                producto_id: producto.id,
-                producto_nombre: producto.nombre,
-                color_elegido: `${colorElegido.name} (${colorElegido.hex})`,
-                mensaje: mensaje.trim(),
-                cantidad,
-                estado: 'pendiente',
-                fecha: new Date().toISOString(),
-            }
-
-            // Solo incluir cliente_id si el usuario está logueado
-            if (user) {
-                pedidoData.cliente_id = user.id
-            }
-
-            await supabase.from('pedidos').insert(pedidoData)
-
-            // ── Paso 2: Construir mensaje de WhatsApp ──
+            // ── Paso 1: Construir mensaje de WhatsApp ──
             const clienteNombre = user?.user_metadata?.nombre || 'Cliente'
             const clienteWA = user?.user_metadata?.whatsapp || '(no registrado)'
             const msgLines = [
@@ -60,8 +42,26 @@ export default function ProductCustomizer({ producto, onClose }) {
 
             const waUrl = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(msgLines)}`
 
-            // ── Paso 3: Abrir WhatsApp y navegar a confirmación ──
-            window.open(waUrl, '_blank', 'noopener,noreferrer')
+            // ── Paso 2: Abrir WhatsApp ANTES del await (evita bloqueo en móvil) ──
+            window.location.href = waUrl
+
+            // ── Paso 3: Guardar pedido en Supabase en segundo plano ──
+            const pedidoData = {
+                producto_id: producto.id,
+                producto_nombre: producto.nombre,
+                color_elegido: `${colorElegido.name} (${colorElegido.hex})`,
+                mensaje: mensaje.trim(),
+                cantidad,
+                estado: 'pendiente',
+                fecha: new Date().toISOString(),
+            }
+
+            if (user) {
+                pedidoData.cliente_id = user.id
+            }
+
+            await supabase.from('pedidos').insert(pedidoData)
+
             onClose()
             navigate('/confirmacion')
         } catch (err) {

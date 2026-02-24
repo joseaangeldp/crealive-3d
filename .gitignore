@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+dist-ssr/
+build/
+
+# Variables de entorno (¡nunca subir!)
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Vite
+vite.config.js.timestamp-*
