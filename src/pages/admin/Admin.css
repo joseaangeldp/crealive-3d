@@ -95,9 +95,51 @@
         transform: translateX(-100%);
     }
 
+    .admin-sidebar.open {
+        transform: translateX(0);
+    }
+
     .admin-main {
         margin-left: 0;
-        padding: 20px 16px;
+        padding: 64px 16px 20px;
+    }
+}
+
+/* Hamburger button (visible only on mobile) */
+.admin-hamburger {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 300;
+    background: var(--color-text);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark overlay behind sidebar on mobile */
+.admin-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 199;
+}
+
+@media (max-width: 768px) {
+    .admin-hamburger {
+        display: flex;
+    }
+
+    .admin-overlay {
+        display: block;
     }
 }
 

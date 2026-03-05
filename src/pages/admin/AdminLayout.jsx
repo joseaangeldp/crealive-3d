@@ -1,9 +1,9 @@
 // ============================================================
 // src/pages/admin/AdminLayout.jsx — Layout del panel de administración
-// Sidebar + contenido anidado con React Router Outlet
+// Sidebar con toggle para móvil
 // ============================================================
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ADMIN_EMAIL } from '../../config'
 import {
@@ -13,6 +13,8 @@ import {
     HiOutlinePhotograph,
     HiOutlineMail,
     HiOutlineLogout,
+    HiMenu,
+    HiX,
 } from 'react-icons/hi'
 import './Admin.css'
 
@@ -26,6 +28,11 @@ const NAV_LINKS = [
 
 export default function AdminLayout() {
     const navigate = useNavigate()
+    const location = useLocation()
+    const [sidebarOpen, setSidebarOpen] = useState(false)
+
+    // Cerrar sidebar al navegar (móvil)
+    useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
     // Verificar que hay sesión de admin al montar
     useEffect(() => {
@@ -43,8 +50,22 @@ export default function AdminLayout() {
 
     return (
         <div className="admin-wrapper" style={{ paddingBottom: 0 }}>
+            {/* Botón hamburguesa (solo móvil) */}
+            <button
+                className="admin-hamburger"
+                onClick={() => setSidebarOpen(o => !o)}
+                aria-label="Abrir menú"
+            >
+                {sidebarOpen ? <HiX size={24} /> : <HiMenu size={24} />}
+            </button>
+
+            {/* Overlay oscuro al abrir sidebar en móvil */}
+            {sidebarOpen && (
+                <div className="admin-overlay" onClick={() => setSidebarOpen(false)} />
+            )}
+
             {/* Sidebar */}
-            <aside className="admin-sidebar">
+            <aside className={`admin-sidebar${sidebarOpen ? ' open' : ''}`}>
                 <div className="admin-sidebar__logo">
                     Crealive 3D
                     <span>Panel de administración</span>

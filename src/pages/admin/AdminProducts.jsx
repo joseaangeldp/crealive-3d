@@ -16,6 +16,7 @@ export default function AdminProducts() {
     const [editItem, setEditItem] = useState(null)
     const [form, setForm] = useState(EMPTY_FORM)
     const [saving, setSaving] = useState(false)
+    const [saveError, setSaveError] = useState('')
 
     const fetchProductos = () => {
         supabase.from('productos').select('*').order('nombre')
@@ -35,14 +36,22 @@ export default function AdminProducts() {
     const handleSave = async e => {
         e.preventDefault()
         setSaving(true)
-        if (editItem) {
-            await supabase.from('productos').update({ ...form, precio: parseFloat(form.precio) }).eq('id', editItem)
-        } else {
-            await supabase.from('productos').insert({ ...form, precio: parseFloat(form.precio) })
+        setSaveError('')
+        try {
+            let result
+            if (editItem) {
+                result = await supabase.from('productos').update({ ...form, precio: parseFloat(form.precio) }).eq('id', editItem)
+            } else {
+                result = await supabase.from('productos').insert({ ...form, precio: parseFloat(form.precio) })
+            }
+            if (result.error) throw result.error
+            closeForm()
+            fetchProductos()
+        } catch (err) {
+            setSaveError(err.message || 'Error al guardar. Verificá los permisos de Supabase (RLS).')
+        } finally {
+            setSaving(false)
         }
-        setSaving(false)
-        closeForm()
-        fetchProductos()
     }
 
     const toggleActivo = async (id, activo) => {
@@ -92,6 +101,15 @@ export default function AdminProducts() {
                             <input type="checkbox" name="activo" checked={form.activo} onChange={handleChange} />
                             Producto activo (visible en catálogo)
                         </label>
+                        {saveError && (
+                            <div style={{
+                                background: '#FFF5F5', border: '1px solid #FECACA', color: '#B91C1C',
+                                borderRadius: 'var(--radius-md)', padding: '10px 14px', fontSize: 13,
+                                marginTop: -8,
+                            }}>
+                                ⚠️ {saveError}
+                            </div>
+                        )}
                         <div className="admin-form-actions">
                             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
                             <button type="button" className="btn btn-outline" onClick={closeForm}>Cancelar</button>
