@@ -7,8 +7,8 @@ import { HiPlus, HiPencil, HiEye, HiEyeOff, HiSearch, HiUpload } from 'react-ico
 import { supabase } from '../../lib/supabase'
 import { CATEGORIAS } from '../../config'
 
-const EMPTY_FORM = { nombre: '', categoria: CATEGORIAS[1], descripcion: '', precio: '', imagen_url: '', activo: true }
-const BUCKET = 'productos' // Nombre del bucket en Supabase Storage
+const EMPTY_FORM = { nombre: '', categoria: CATEGORIAS[1], descripcion: '', precio: '', imagen_url: '', imagenes: [], activo: true }
+const BUCKET = 'productos'
 
 export default function AdminProducts() {
     const [productos, setProductos] = useState([])
@@ -36,27 +36,39 @@ export default function AdminProducts() {
         setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }))
     }
 
-    // ── Subir imagen a Supabase Storage ──
+    // ── Subir imágenes a Supabase Storage (múltiples) ──
     const handleImageUpload = async e => {
-        const file = e.target.files?.[0]
-        if (!file) return
+        const files = Array.from(e.target.files || [])
+        if (!files.length) return
         setUploading(true)
         setSaveError('')
         try {
-            const ext = file.name.split('.').pop()
-            const fileName = `${Date.now()}.${ext}`
-            const { error: uploadError } = await supabase.storage
-                .from(BUCKET)
-                .upload(fileName, file, { upsert: true })
-            if (uploadError) throw uploadError
-
-            const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
-            setForm(f => ({ ...f, imagen_url: data.publicUrl }))
+            const newUrls = []
+            for (const file of files) {
+                const ext = file.name.split('.').pop()
+                const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+                const { error: uploadError } = await supabase.storage
+                    .from(BUCKET).upload(fileName, file, { upsert: true })
+                if (uploadError) throw uploadError
+                const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
+                newUrls.push(data.publicUrl)
+            }
+            setForm(f => {
+                const todas = [...(f.imagenes || []), ...newUrls]
+                return { ...f, imagenes: todas, imagen_url: todas[0] || f.imagen_url }
+            })
         } catch (err) {
-            setSaveError(`Error al subir imagen: ${err.message}. Verificá que el bucket '${BUCKET}' existe y es público en Supabase Storage.`)
+            setSaveError(`Error al subir imagen: ${err.message}`)
         } finally {
             setUploading(false)
         }
+    }
+
+    const removeImage = (url) => {
+        setForm(f => {
+            const imagenes = f.imagenes.filter(u => u !== url)
+            return { ...f, imagenes, imagen_url: imagenes[0] || '' }
+        })
     }
 
     const handleSave = async e => {
@@ -141,26 +153,35 @@ export default function AdminProducts() {
                             <textarea name="descripcion" className="form-input" rows={2} value={form.descripcion} onChange={handleChange} style={{ resize: 'vertical' }} />
                         </div>
 
-                        {/* Imagen */}
+                        {/* Imágenes múltiples */}
                         <div className="form-group">
-                            <label className="form-label">Imagen del producto</label>
-                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                                {/* Preview */}
-                                {form.imagen_url && (
-                                    <img src={form.imagen_url} alt="preview"
-                                        style={{ width: 64, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--color-border)', flexShrink: 0 }} />
-                                )}
-                                {/* Upload button */}
-                                <label className="btn btn-outline" style={{ cursor: 'pointer', fontSize: 13, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <HiUpload />
-                                    {uploading ? 'Subiendo...' : 'Subir foto'}
-                                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={uploading} />
-                                </label>
-                                {/* URL manual como fallback */}
-                                <input name="imagen_url" type="url" className="form-input" placeholder="O pegá una URL..."
-                                    value={form.imagen_url} onChange={handleChange}
-                                    style={{ flex: 1, minWidth: 160 }} />
-                            </div>
+                            <label className="form-label">Imágenes del producto</label>
+                            {/* Miniaturas cargadas */}
+                            {(form.imagenes || []).length > 0 && (
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                                    {form.imagenes.map((url, i) => (
+                                        <div key={url} style={{ position: 'relative' }}>
+                                            <img src={url} alt={`img-${i}`}
+                                                style={{
+                                                    width: 62, height: 52, objectFit: 'cover', borderRadius: 8,
+                                                    border: i === 0 ? '2px solid var(--color-wine)' : '1px solid var(--color-border)'
+                                                }} />
+                                            {i === 0 && <span style={{ position: 'absolute', bottom: 2, left: 2, fontSize: 9, background: 'var(--color-wine)', color: '#fff', borderRadius: 4, padding: '1px 4px' }}>Principal</span>}
+                                            <button type="button" onClick={() => removeImage(url)}
+                                                style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {/* Botón de upload */}
+                            <label className="btn btn-outline" style={{ cursor: 'pointer', fontSize: 13, padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                <HiUpload />
+                                {uploading ? 'Subiendo...' : 'Subir fotos'}
+                                <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} disabled={uploading} />
+                            </label>
+                            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', marginLeft: 8 }}>Podés seleccionar varias a la vez</span>
                         </div>
 
                         <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>

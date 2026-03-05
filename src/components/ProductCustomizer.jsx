@@ -1,10 +1,10 @@
 // ============================================================
 // src/components/ProductCustomizer.jsx — Modal de personalización
-// Dos botones: Agregar al carrito | Enviar pedido directo
+// Galería de imágenes con lightbox + carrito y pedido directo
 // ============================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { HiX } from 'react-icons/hi'
+import { HiX, HiChevronLeft, HiChevronRight } from 'react-icons/hi'
 import { FILAMENT_COLORS, WHATSAPP_NEGOCIO } from '../config'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -16,6 +16,16 @@ export default function ProductCustomizer({ producto, onClose }) {
     const { addItem } = useCart()
     const navigate = useNavigate()
 
+    // Construir array de imágenes (imagenes[] + imagen_url como fallback)
+    const allImages = (() => {
+        const imgs = Array.isArray(producto.imagenes) && producto.imagenes.length > 0
+            ? producto.imagenes
+            : producto.imagen_url ? [producto.imagen_url] : []
+        return imgs
+    })()
+
+    const [imgIndex, setImgIndex] = useState(0)
+    const [lightbox, setLightbox] = useState(false)
     const [colorElegido, setColorElegido] = useState(FILAMENT_COLORS[0])
     const [mensaje, setMensaje] = useState('')
     const [cantidad, setCantidad] = useState(1)
@@ -23,26 +33,20 @@ export default function ProductCustomizer({ producto, onClose }) {
     const [error, setError] = useState('')
     const [toast, setToast] = useState(false)
 
+    const prevImg = (e) => { e?.stopPropagation(); setImgIndex(i => (i - 1 + allImages.length) % allImages.length) }
+    const nextImg = (e) => { e?.stopPropagation(); setImgIndex(i => (i + 1) % allImages.length) }
+
     // ── AGREGAR AL CARRITO ──
     const handleAgregarCarrito = () => {
-        addItem({
-            producto,
-            color: colorElegido,
-            cantidad,
-            mensaje,
-        })
+        addItem({ producto, color: colorElegido, cantidad, mensaje })
         setToast(true)
-        setTimeout(() => {
-            setToast(false)
-            onClose()
-        }, 1200)
+        setTimeout(() => { setToast(false); onClose() }, 1200)
     }
 
-    // ── ENVIAR PEDIDO DIRECTO (flujo existente) ──
+    // ── ENVIAR PEDIDO DIRECTO ──
     const handleEnviarDirecto = async () => {
         setError('')
         setEnviando(true)
-
         try {
             const clienteNombre = user?.user_metadata?.nombre || 'Cliente'
             const clienteWA = user?.user_metadata?.whatsapp || '(no registrado)'
@@ -59,11 +63,8 @@ export default function ProductCustomizer({ producto, onClose }) {
             ].filter(Boolean).join('\n')
 
             const waUrl = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(msgLines)}`
-
-            // Abrir WhatsApp ANTES del await
             window.location.href = waUrl
 
-            // Guardar en Supabase
             const pedidoData = {
                 producto_id: producto.id,
                 producto_nombre: producto.nombre,
@@ -75,7 +76,6 @@ export default function ProductCustomizer({ producto, onClose }) {
             }
             if (user) pedidoData.cliente_id = user.id
             await supabase.from('pedidos').insert(pedidoData)
-
             onClose()
             navigate('/confirmacion')
         } catch (err) {
@@ -88,11 +88,26 @@ export default function ProductCustomizer({ producto, onClose }) {
     return (
         <>
             <div className="overlay" onClick={onClose} />
+
+            {/* ── Lightbox ── */}
+            {lightbox && allImages.length > 0 && (
+                <div className="lightbox" onClick={() => setLightbox(false)}>
+                    <button className="lightbox-close" onClick={() => setLightbox(false)}><HiX size={22} /></button>
+                    {allImages.length > 1 && (
+                        <>
+                            <button className="lightbox-arrow lightbox-arrow--left" onClick={prevImg}><HiChevronLeft size={28} /></button>
+                            <button className="lightbox-arrow lightbox-arrow--right" onClick={nextImg}><HiChevronRight size={28} /></button>
+                        </>
+                    )}
+                    <img src={allImages[imgIndex]} alt={producto.nombre} className="lightbox-img" onClick={e => e.stopPropagation()} />
+                    {allImages.length > 1 && (
+                        <p className="lightbox-counter">{imgIndex + 1} / {allImages.length}</p>
+                    )}
+                </div>
+            )}
+
             <div className="modal customizer-modal" role="dialog" aria-modal="true">
-                {/* Toast de confirmación */}
-                {toast && (
-                    <div className="customizer-toast">✅ ¡Agregado al carrito!</div>
-                )}
+                {toast && <div className="customizer-toast">✅ ¡Agregado al carrito!</div>}
 
                 {/* Encabezado */}
                 <div className="customizer-header">
@@ -105,11 +120,35 @@ export default function ProductCustomizer({ producto, onClose }) {
                     </button>
                 </div>
 
-                <img
-                    src={producto.imagen_url}
-                    alt={producto.nombre}
-                    className="customizer-img"
-                />
+                {/* ── Galería de imágenes ── */}
+                {allImages.length > 0 ? (
+                    <div className="customizer-gallery">
+                        {/* Imagen principal */}
+                        <div className="customizer-gallery__main" onClick={() => setLightbox(true)} title="Clic para ampliar">
+                            <img src={allImages[imgIndex]} alt={producto.nombre} className="customizer-img" />
+                            {allImages.length > 1 && (
+                                <>
+                                    <button className="gallery-arrow gallery-arrow--left" onClick={prevImg}><HiChevronLeft size={20} /></button>
+                                    <button className="gallery-arrow gallery-arrow--right" onClick={nextImg}><HiChevronRight size={20} /></button>
+                                </>
+                            )}
+                            <div className="gallery-zoom-hint">🔍 Clic para ampliar</div>
+                        </div>
+                        {/* Miniaturas */}
+                        {allImages.length > 1 && (
+                            <div className="customizer-gallery__thumbs">
+                                {allImages.map((url, i) => (
+                                    <img key={url} src={url} alt={`thumb-${i}`}
+                                        className={`gallery-thumb${i === imgIndex ? ' active' : ''}`}
+                                        onClick={() => setImgIndex(i)} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="customizer-img-placeholder">📦</div>
+                )}
+
 
                 {/* Selector de color */}
                 <div className="customizer-section">
