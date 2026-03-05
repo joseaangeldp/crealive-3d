@@ -4,7 +4,7 @@
 // ============================================================
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { ESTADOS_PEDIDO } from '../../config'
+import { ESTADOS_PEDIDO, RESEND_API_KEY } from '../../config'
 
 const BADGE = {
     'pendiente': 'badge-pendiente',
@@ -37,6 +37,55 @@ export default function AdminOrders() {
     const cambiarEstado = async (id, nuevoEstado) => {
         await supabase.from('pedidos').update({ estado: nuevoEstado }).eq('id', id)
         setPedidos(prev => prev.map(p => p.id === id ? { ...p, estado: nuevoEstado } : p))
+
+        // Enviar email al cliente si el estado avanzó
+        if (nuevoEstado === 'en producción' || nuevoEstado === 'entregado') {
+            try {
+                const pedido = pedidos.find(p => p.id === id)
+                const email = pedido?.clientes?.email
+                const nombre = pedido?.clientes?.nombre || 'Cliente'
+                if (!email || !RESEND_API_KEY || RESEND_API_KEY === 're_xxxxxxxxxx') return
+
+                const statusLink = `${window.location.origin}/pedido/${id}`
+                const emoji = nuevoEstado === 'entregado' ? '🎉' : '⚙️'
+                const titulo = nuevoEstado === 'entregado'
+                    ? '¡Tu pedido fue entregado!'
+                    : 'Tu pedido está en producción'
+                const desc = nuevoEstado === 'entregado'
+                    ? 'Ya está listo y en camino. ¡Esperamos que lo disfrutes!'
+                    : 'Estamos fabricando tu pieza con mucho amor. Pronto estará lista.'
+
+                await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${RESEND_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        from: 'Crealive 3D <noreply@crealive3d.com>',
+                        to: [email],
+                        subject: `${emoji} ${titulo} — Crealive 3D`,
+                        html: `
+                            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FAFAF8;border-radius:16px">
+                                <h1 style="font-family:Georgia,serif;color:#C4768A;font-size:26px;margin-bottom:4px">Crealive 3D</h1>
+                                <p style="color:#7a7a7a;font-size:13px;margin-bottom:28px">Impresión 3D personalizada</p>
+                                <div style="background:#fff;border-radius:12px;padding:28px;border:1px solid #EDEDEA;text-align:center">
+                                    <div style="font-size:48px;margin-bottom:16px">${emoji}</div>
+                                    <h2 style="color:#2E2E2E;font-size:22px;margin-bottom:10px">${titulo}</h2>
+                                    <p style="color:#555;line-height:1.6;margin-bottom:24px">Hola ${nombre}, ${desc}</p>
+                                    <a href="${statusLink}" style="display:inline-block;background:#C4768A;color:#fff;padding:12px 28px;border-radius:24px;text-decoration:none;font-weight:700;font-size:15px">
+                                        Ver estado de mi pedido
+                                    </a>
+                                </div>
+                                <p style="font-size:12px;color:#aaa;margin-top:24px;text-align:center">
+                                    Recibís este email porque realizaste un pedido en Crealive 3D.
+                                </p>
+                            </div>
+                        `,
+                    }),
+                })
+            } catch (_) { /* Si falla el email, no interrumpe el flujo */ }
+        }
     }
 
     const abrirDetalle = async (pedido) => {
