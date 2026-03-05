@@ -52,3 +52,36 @@
 .bottom-nav__item:hover {
     color: var(--color-wine);
 }
+
+/* Carrito en bottom nav */
+.bottom-nav__cart {
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+    cursor: pointer;
+}
+
+.bottom-nav__cart-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-badge-mobile {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    background: var(--color-wine);
+    color: #fff;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

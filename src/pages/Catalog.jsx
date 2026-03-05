@@ -1,9 +1,10 @@
 // ============================================================
 // src/pages/Catalog.jsx — Catálogo de productos con filtros y personalizador
+// Incluye modal de "Diseño desde cero" con envío por WhatsApp
 // ============================================================
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { CATEGORIAS } from '../config'
+import { CATEGORIAS, WHATSAPP_NEGOCIO, FILAMENT_COLORS } from '../config'
 import ProductCard from '../components/ProductCard'
 import ProductCustomizer from '../components/ProductCustomizer'
 import './Catalog.css'
@@ -18,10 +19,81 @@ const DEMO_PRODUCTOS = [
     { id: '6', nombre: 'Maceta Colgante', categoria: 'Macetas / Decoración hogar', descripcion: 'Con sistema de colgado incluido', precio: 11.99, imagen_url: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=400&q=80', activo: true },
 ]
 
+const EMPTY_CUSTOM = { nombre: '', descripcion: '', colores: '', referencia: '', cantidad: '1' }
+
+function CustomOrderModal({ onClose }) {
+    const [form, setForm] = useState(EMPTY_CUSTOM)
+    const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+
+    const handleSend = e => {
+        e.preventDefault()
+        const msg =
+            `🎨 *PEDIDO A MEDIDA — Crealive 3D*\n\n` +
+            `👤 *Nombre:* ${form.nombre}\n` +
+            `📝 *Descripción de la pieza:*\n${form.descripcion}\n` +
+            `🎨 *Colores preferidos:* ${form.colores || 'Sin preferencia'}\n` +
+            `🔗 *Referencia / inspiración:* ${form.referencia || '—'}\n` +
+            `🔢 *Cantidad:* ${form.cantidad}`
+        window.open(`https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(msg)}`, '_blank')
+        onClose()
+    }
+
+    return (
+        <>
+            <div className="overlay" onClick={onClose} style={{ zIndex: 400 }} />
+            <div className="modal custom-order-modal" style={{ zIndex: 401 }}>
+                <button className="modal-close" onClick={onClose} aria-label="Cerrar">✕</button>
+                <div className="custom-order-header">
+                    <span className="custom-order-icon">✏️</span>
+                    <h2>Diseño desde cero</h2>
+                    <p>Contanos qué tenés en mente y te lo fabricamos</p>
+                </div>
+                <form className="custom-order-form" onSubmit={handleSend}>
+                    <div className="form-group">
+                        <label className="form-label">Tu nombre</label>
+                        <input name="nombre" className="form-input" placeholder="Ej: María García" value={form.nombre} onChange={handleChange} required />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">¿Qué pieza querés? Describila en detalle</label>
+                        <textarea name="descripcion" className="form-input" rows={4} placeholder="Ej: Un organizador con 3 compartimentos para mi escritorio, con ranura para el celular..." value={form.descripcion} onChange={handleChange} required style={{ resize: 'vertical' }} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Colores preferidos</label>
+                        <input name="colores" className="form-input" placeholder="Ej: Azul pastel, blanco o rosado" value={form.colores} onChange={handleChange} />
+                        <div className="color-hint-row">
+                            {FILAMENT_COLORS.map(c => (
+                                <span
+                                    key={c.name}
+                                    title={c.name}
+                                    className="color-hint-dot"
+                                    style={{ background: c.hex }}
+                                />
+                            ))}
+                            <span className="color-hint-label">{FILAMENT_COLORS.length} colores disponibles</span>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Referencia o inspiración (opcional)</label>
+                        <input name="referencia" className="form-input" placeholder="Ej: Link de Pinterest, imagen, descripción..." value={form.referencia} onChange={handleChange} />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Cantidad</label>
+                        <input name="cantidad" type="number" min="1" className="form-input" value={form.cantidad} onChange={handleChange} style={{ maxWidth: 100 }} />
+                    </div>
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: 8, gap: 8 }}>
+                        💬 Enviar por WhatsApp
+                    </button>
+                </form>
+            </div>
+        </>
+    )
+}
+
 export default function Catalog() {
     const [productos, setProductos] = useState(DEMO_PRODUCTOS)
     const [categoria, setCategoria] = useState('Todos')
-    const [selected, setSelected] = useState(null) // producto seleccionado para customizar
+    const [selected, setSelected] = useState(null)
+    const [customOpen, setCustomOpen] = useState(false)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -87,15 +159,32 @@ export default function Catalog() {
                         ))}
                     </div>
                 )}
+
+                {/* Banner diseño desde cero */}
+                <div className="custom-order-banner">
+                    <div className="custom-order-banner__text">
+                        <span className="custom-order-banner__icon">✨</span>
+                        <div>
+                            <strong>¿No encontrás lo que buscás?</strong>
+                            <p>Pedí tu diseño desde cero — lo fabricamos para vos</p>
+                        </div>
+                    </div>
+                    <button className="btn btn-primary" onClick={() => setCustomOpen(true)}>
+                        Diseño a medida
+                    </button>
+                </div>
             </div>
 
-            {/* Modal personalizador */}
+            {/* Modal personalizador de producto existente */}
             {selected && (
                 <ProductCustomizer
                     producto={selected}
                     onClose={() => setSelected(null)}
                 />
             )}
+
+            {/* Modal pedido desde cero */}
+            {customOpen && <CustomOrderModal onClose={() => setCustomOpen(false)} />}
         </main>
     )
 }

@@ -86,6 +86,29 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* ── Cómo funciona ── */}
+            <section className="section how-it-works">
+                <div className="container">
+                    <h2 className="section-title">¿Cómo funciona?</h2>
+                    <p className="section-sub">De tu idea a tu puerta en 4 pasos simples</p>
+                    <div className="steps-grid">
+                        {[
+                            { step: '01', emoji: '🛍️', title: 'Explorás el catálogo', desc: 'Buscá entre nuestros productos o pedí un diseño completamente personalizado' },
+                            { step: '02', emoji: '🎨', title: 'Elegís colores y detalles', desc: 'Seleccionás entre 13 colores de filamento y nos contás exactamente qué querés' },
+                            { step: '03', emoji: '💬', title: 'Enviás tu pedido', desc: 'Te redirigimos a WhatsApp con tu pedido listo — solo tenés que confirmar' },
+                            { step: '04', emoji: '📦', title: 'Recibís tu pieza', desc: 'Fabricamos tu pieza con amor y te la enviamos a donde estés' },
+                        ].map(s => (
+                            <div key={s.step} className="step-card">
+                                <div className="step-number">{s.step}</div>
+                                <span className="step-emoji">{s.emoji}</span>
+                                <h3>{s.title}</h3>
+                                <p>{s.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ── Sección de propuesta de valor ── */}
             <section className="section home-features">
                 <div className="container">

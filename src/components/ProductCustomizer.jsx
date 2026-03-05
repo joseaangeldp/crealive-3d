@@ -1,6 +1,6 @@
 // ============================================================
 // src/components/ProductCustomizer.jsx — Modal de personalización
-// Incluye selector de colores, mensaje, cantidad, y envío de pedido
+// Dos botones: Agregar al carrito | Enviar pedido directo
 // ============================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -8,10 +8,12 @@ import { HiX } from 'react-icons/hi'
 import { FILAMENT_COLORS, WHATSAPP_NEGOCIO } from '../config'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../contexts/CartContext'
 import './ProductCustomizer.css'
 
 export default function ProductCustomizer({ producto, onClose }) {
     const { user } = useAuth()
+    const { addItem } = useCart()
     const navigate = useNavigate()
 
     const [colorElegido, setColorElegido] = useState(FILAMENT_COLORS[0])
@@ -19,13 +21,29 @@ export default function ProductCustomizer({ producto, onClose }) {
     const [cantidad, setCantidad] = useState(1)
     const [enviando, setEnviando] = useState(false)
     const [error, setError] = useState('')
+    const [toast, setToast] = useState(false)
 
-    const handleEnviar = async () => {
+    // ── AGREGAR AL CARRITO ──
+    const handleAgregarCarrito = () => {
+        addItem({
+            producto,
+            color: colorElegido,
+            cantidad,
+            mensaje,
+        })
+        setToast(true)
+        setTimeout(() => {
+            setToast(false)
+            onClose()
+        }, 1200)
+    }
+
+    // ── ENVIAR PEDIDO DIRECTO (flujo existente) ──
+    const handleEnviarDirecto = async () => {
         setError('')
         setEnviando(true)
 
         try {
-            // ── Paso 1: Construir mensaje de WhatsApp ──
             const clienteNombre = user?.user_metadata?.nombre || 'Cliente'
             const clienteWA = user?.user_metadata?.whatsapp || '(no registrado)'
             const msgLines = [
@@ -42,10 +60,10 @@ export default function ProductCustomizer({ producto, onClose }) {
 
             const waUrl = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(msgLines)}`
 
-            // ── Paso 2: Abrir WhatsApp ANTES del await (evita bloqueo en móvil) ──
+            // Abrir WhatsApp ANTES del await
             window.location.href = waUrl
 
-            // ── Paso 3: Guardar pedido en Supabase en segundo plano ──
+            // Guardar en Supabase
             const pedidoData = {
                 producto_id: producto.id,
                 producto_nombre: producto.nombre,
@@ -55,11 +73,7 @@ export default function ProductCustomizer({ producto, onClose }) {
                 estado: 'pendiente',
                 fecha: new Date().toISOString(),
             }
-
-            if (user) {
-                pedidoData.cliente_id = user.id
-            }
-
+            if (user) pedidoData.cliente_id = user.id
             await supabase.from('pedidos').insert(pedidoData)
 
             onClose()
@@ -75,6 +89,11 @@ export default function ProductCustomizer({ producto, onClose }) {
         <>
             <div className="overlay" onClick={onClose} />
             <div className="modal customizer-modal" role="dialog" aria-modal="true">
+                {/* Toast de confirmación */}
+                {toast && (
+                    <div className="customizer-toast">✅ ¡Agregado al carrito!</div>
+                )}
+
                 {/* Encabezado */}
                 <div className="customizer-header">
                     <div>
@@ -136,8 +155,7 @@ export default function ProductCustomizer({ producto, onClose }) {
                             id="custom-qty"
                             type="number"
                             className="form-input qty-input"
-                            min={1}
-                            max={99}
+                            min={1} max={99}
                             value={cantidad}
                             onChange={e => setCantidad(Math.max(1, parseInt(e.target.value) || 1))}
                         />
@@ -153,14 +171,25 @@ export default function ProductCustomizer({ producto, onClose }) {
 
                 {error && <div className="auth-error" style={{ marginBottom: '12px' }}>{error}</div>}
 
-                <button
-                    className="btn btn-primary"
-                    style={{ width: '100%', padding: '14px', fontSize: '15px' }}
-                    onClick={handleEnviar}
-                    disabled={enviando}
-                >
-                    {enviando ? 'Enviando...' : '📲 Enviar pedido por WhatsApp'}
-                </button>
+                {/* BOTONES */}
+                <div className="customizer-actions">
+                    <button
+                        className="btn btn-primary"
+                        style={{ flex: 1 }}
+                        onClick={handleAgregarCarrito}
+                        disabled={toast}
+                    >
+                        🛒 Agregar al carrito
+                    </button>
+                    <button
+                        className="btn btn-outline"
+                        style={{ flex: 1 }}
+                        onClick={handleEnviarDirecto}
+                        disabled={enviando}
+                    >
+                        {enviando ? 'Enviando...' : '📲 Enviar directo'}
+                    </button>
+                </div>
 
                 {!user && (
                     <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '12px' }}>

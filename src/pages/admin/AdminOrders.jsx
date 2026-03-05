@@ -1,6 +1,6 @@
 // ============================================================
 // src/pages/admin/AdminOrders.jsx — Gestión de pedidos
-// Tabla con filtro por estado y dropdown para cambiar estado
+// Ahora incluye modal de detalle con pedido_items
 // ============================================================
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
@@ -17,6 +17,9 @@ export default function AdminOrders() {
     const [pedidos, setPedidos] = useState([])
     const [filtro, setFiltro] = useState('todos')
     const [loading, setLoading] = useState(true)
+    const [pedidoDetalle, setPedidoDetalle] = useState(null)
+    const [itemsDetalle, setItemsDetalle] = useState([])
+    const [loadingItems, setLoadingItems] = useState(false)
 
     const fetchPedidos = async () => {
         setLoading(true)
@@ -36,9 +39,28 @@ export default function AdminOrders() {
         setPedidos(prev => prev.map(p => p.id === id ? { ...p, estado: nuevoEstado } : p))
     }
 
+    const abrirDetalle = async (pedido) => {
+        setPedidoDetalle(pedido)
+        setItemsDetalle([])
+        setLoadingItems(true)
+        const { data } = await supabase
+            .from('pedido_items')
+            .select('*')
+            .eq('pedido_id', pedido.id)
+        setItemsDetalle(data || [])
+        setLoadingItems(false)
+    }
+
     const formatFecha = iso => new Date(iso).toLocaleDateString('es-AR', {
         day: '2-digit', month: 'short', year: 'numeric'
     })
+
+    const copyLink = (id) => {
+        const url = `${window.location.origin}/pedido/${id}`
+        navigator.clipboard.writeText(url).then(() => {
+            alert('\u00a1Link copiado! Mandáselo al cliente por WhatsApp.')
+        })
+    }
 
     return (
         <div>
@@ -71,6 +93,7 @@ export default function AdminOrders() {
                                 <th>Cant.</th>
                                 <th>Mensaje</th>
                                 <th>Estado</th>
+                                <th>Detalle</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -109,12 +132,120 @@ export default function AdminOrders() {
                                             ))}
                                         </select>
                                     </td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                            <button
+                                                onClick={() => abrirDetalle(p)}
+                                                style={{
+                                                    fontSize: '12px', color: 'var(--color-wine)',
+                                                    fontWeight: 600, textDecoration: 'underline',
+                                                    background: 'none', border: 'none', cursor: 'pointer',
+                                                    fontFamily: 'var(--font-body)',
+                                                }}
+                                            >
+                                                Ver items
+                                            </button>
+                                            <button
+                                                onClick={() => copyLink(p.id)}
+                                                title="Copiar link del pedido para el cliente"
+                                                style={{
+                                                    fontSize: '12px', color: '#0c5460',
+                                                    fontWeight: 600,
+                                                    background: '#d1ecf1', border: 'none', cursor: 'pointer',
+                                                    fontFamily: 'var(--font-body)',
+                                                    borderRadius: 6, padding: '4px 8px',
+                                                }}
+                                            >
+                                                🔗 Link
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 )}
             </div>
+
+            {/* Modal de detalle del pedido */}
+            {pedidoDetalle && (
+                <>
+                    <div
+                        className="overlay"
+                        onClick={() => setPedidoDetalle(null)}
+                        style={{ zIndex: 500 }}
+                    />
+                    <div className="modal" style={{ zIndex: 501, maxWidth: 560 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <div>
+                                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Detalle del pedido
+                                </p>
+                                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20 }}>
+                                    {pedidoDetalle.clientes?.nombre || 'Cliente invitado'}
+                                </h3>
+                            </div>
+                            <button
+                                onClick={() => setPedidoDetalle(null)}
+                                style={{ fontSize: 20, color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                            >✕</button>
+                        </div>
+
+                        {loadingItems ? (
+                            <div className="spinner" />
+                        ) : itemsDetalle.length === 0 ? (
+                            <div style={{ padding: '20px 0', textAlign: 'center' }}>
+                                <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
+                                    Este pedido no tiene items detallados (fue enviado directamente).
+                                </p>
+                                <div style={{ marginTop: 16, padding: 16, background: 'var(--color-surface-2)', borderRadius: 12 }}>
+                                    <p style={{ fontWeight: 600 }}>{pedidoDetalle.producto_nombre}</p>
+                                    <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
+                                        Color: {pedidoDetalle.color_elegido} · Cant: {pedidoDetalle.cantidad}
+                                    </p>
+                                    {pedidoDetalle.mensaje && (
+                                        <p style={{ fontSize: 13, marginTop: 4, fontStyle: 'italic' }}>"{pedidoDetalle.mensaje}"</p>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                {itemsDetalle.map((item, i) => (
+                                    <div key={item.id} style={{
+                                        padding: '14px 16px',
+                                        background: 'var(--color-surface-2)',
+                                        borderRadius: 12,
+                                        border: '1px solid var(--color-border)',
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: 13 }}>
+                                                #{i + 1}
+                                            </span>
+                                            <strong style={{ flex: 1 }}>{item.producto_nombre}</strong>
+                                            <span style={{ fontWeight: 700, fontSize: 14 }}>×{item.cantidad}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                                            <span style={{
+                                                width: 14, height: 14, borderRadius: '50%',
+                                                background: item.color_elegido?.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#ccc',
+                                                border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0,
+                                            }} />
+                                            <span style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+                                                {item.color_elegido?.split(' (')[0]}
+                                            </span>
+                                        </div>
+                                        {item.mensaje_especial && (
+                                            <p style={{ fontSize: 12, marginTop: 6, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                                                📝 "{item.mensaje_especial}"
+                                            </p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     )
 }
