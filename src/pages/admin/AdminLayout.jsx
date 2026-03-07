@@ -12,6 +12,7 @@ import {
     HiOutlineCube,
     HiOutlinePhotograph,
     HiOutlineMail,
+    HiOutlineTag,
     HiOutlineLogout,
     HiMenu,
     HiX,
@@ -23,6 +24,7 @@ const NAV_LINKS = [
     { to: '/admin/clientes', label: 'Clientes', Icon: HiOutlineUsers },
     { to: '/admin/productos', label: 'Productos', Icon: HiOutlineCube },
     { to: '/admin/colecciones', label: 'Colecciones', Icon: HiOutlinePhotograph },
+    { to: '/admin/categorias', label: 'Categorías', Icon: HiOutlineTag },
     { to: '/admin/marketing', label: 'Email Marketing', Icon: HiOutlineMail },
 ]
 

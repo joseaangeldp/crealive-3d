@@ -4,7 +4,7 @@
 // ============================================================
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { CATEGORIAS, WHATSAPP_NEGOCIO, FILAMENT_COLORS } from '../config'
+import { CATEGORIAS as CATEGORIAS_FALLBACK, WHATSAPP_NEGOCIO, FILAMENT_COLORS } from '../config'
 import ProductCard from '../components/ProductCard'
 import ProductCustomizer from '../components/ProductCustomizer'
 import './Catalog.css'
@@ -91,6 +91,7 @@ function CustomOrderModal({ onClose }) {
 
 export default function Catalog() {
     const [productos, setProductos] = useState(DEMO_PRODUCTOS)
+    const [categorias, setCategorias] = useState(CATEGORIAS_FALLBACK)
     const [categoria, setCategoria] = useState('Todos')
     const [selected, setSelected] = useState(null)
     const [customOpen, setCustomOpen] = useState(false)
@@ -99,13 +100,23 @@ export default function Catalog() {
     useEffect(() => {
         const load = async () => {
             try {
-                const { data, error } = await supabase
+                // Cargar productos
+                const { data: prods, error: prodsError } = await supabase
                     .from('productos')
                     .select('*')
                     .eq('activo', true)
-                if (!error && data && data.length > 0) setProductos(data)
+                if (!prodsError && prods && prods.length > 0) setProductos(prods)
+
+                // Cargar categorías dinámicas desde Supabase
+                const { data: cats, error: catsError } = await supabase
+                    .from('categorias')
+                    .select('nombre')
+                    .order('nombre', { ascending: true })
+                if (!catsError && cats && cats.length > 0) {
+                    setCategorias(['Todos', ...cats.map(c => c.nombre)])
+                }
             } catch (_) {
-                // Supabase no configurado — se usan los productos demo
+                // Supabase no configurado — se usan los datos de demo/config
             } finally {
                 setLoading(false)
             }
@@ -129,7 +140,7 @@ export default function Catalog() {
             <div className="container section">
                 {/* Filtros de categoría */}
                 <div className="category-filters">
-                    {CATEGORIAS.map(cat => (
+                    {categorias.map(cat => (
                         <button
                             key={cat}
                             className={'cat-btn' + (categoria === cat ? ' active' : '')}

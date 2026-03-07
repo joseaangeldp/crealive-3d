@@ -5,13 +5,13 @@
 import { useEffect, useState } from 'react'
 import { HiPlus, HiPencil, HiEye, HiEyeOff, HiSearch, HiUpload } from 'react-icons/hi'
 import { supabase } from '../../lib/supabase'
-import { CATEGORIAS } from '../../config'
 
-const EMPTY_FORM = { nombre: '', categoria: CATEGORIAS[1], descripcion: '', precio: '', imagen_url: '', imagenes: [], activo: true }
+const EMPTY_FORM = { nombre: '', categoria: '', descripcion: '', precio: '', imagen_url: '', imagenes: [], activo: true }
 const BUCKET = 'productos'
 
 export default function AdminProducts() {
     const [productos, setProductos] = useState([])
+    const [categorias, setCategorias] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [showForm, setShowForm] = useState(false)
@@ -25,9 +25,15 @@ export default function AdminProducts() {
         supabase.from('productos').select('*').order('nombre')
             .then(({ data }) => { setProductos(data || []); setLoading(false) })
     }
-    useEffect(fetchProductos, [])
 
-    const openNew = () => { setForm(EMPTY_FORM); setEditItem(null); setShowForm(true); setSaveError('') }
+    const fetchCategorias = () => {
+        supabase.from('categorias').select('nombre').order('nombre')
+            .then(({ data }) => setCategorias((data || []).map(c => c.nombre)))
+    }
+
+    useEffect(() => { fetchProductos(); fetchCategorias() }, [])
+
+    const openNew = () => { setForm({ ...EMPTY_FORM, categoria: categorias[0] || '' }); setEditItem(null); setShowForm(true); setSaveError('') }
     const openEdit = p => { setForm(p); setEditItem(p.id); setShowForm(true); setSaveError('') }
     const closeForm = () => { setShowForm(false); setEditItem(null); setSaveError('') }
 
@@ -145,7 +151,10 @@ export default function AdminProducts() {
                         <div className="form-group">
                             <label className="form-label">Categoría</label>
                             <select name="categoria" className="form-input status-select" value={form.categoria} onChange={handleChange}>
-                                {CATEGORIAS.slice(1).map(c => <option key={c} value={c}>{c}</option>)}
+                                {categorias.length === 0
+                                    ? <option value="">Cargando...</option>
+                                    : categorias.map(c => <option key={c} value={c}>{c}</option>)
+                                }
                             </select>
                         </div>
                         <div className="form-group">
