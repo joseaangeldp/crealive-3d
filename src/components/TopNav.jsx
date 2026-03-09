@@ -10,7 +10,7 @@ import CartDrawer from './CartDrawer'
 import './TopNav.css'
 
 export default function TopNav() {
-    const { user, logout } = useAuth()
+    const { user, profile, logout } = useAuth()
     const { itemCount } = useCart()
     const [cartOpen, setCartOpen] = useState(false)
 
@@ -44,7 +44,12 @@ export default function TopNav() {
 
                         {user ? (
                             <>
-                                <span className="topnav__user">Hola, {user.user_metadata?.nombre || user.email}</span>
+                                <span className="topnav__user">Hola, {
+                                    profile?.nombre ||
+                                    user.user_metadata?.full_name ||
+                                    user.user_metadata?.name ||
+                                    user.email
+                                }</span>
                                 <button className="btn btn-outline" style={{ padding: '8px 20px', fontSize: '13px' }} onClick={logout}>
                                     Salir
                                 </button>

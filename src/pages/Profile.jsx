@@ -40,9 +40,9 @@ export default function Profile() {
         <main className="container section">
             {/* Encabezado de perfil */}
             <div className="profile-header card">
-                <div className="profile-avatar">{(cliente?.nombre || user.email)[0].toUpperCase()}</div>
+                <div className="profile-avatar">{(cliente?.nombre || user.user_metadata?.full_name || user.user_metadata?.name || user.email)[0].toUpperCase()}</div>
                 <div className="profile-info">
-                    <h2>{cliente?.nombre || 'Usuario'}</h2>
+                    <h2>{cliente?.nombre || user.user_metadata?.full_name || user.user_metadata?.name || 'Usuario'}</h2>
                     <p>{user.email}</p>
                     {cliente?.whatsapp && <p>📱 {cliente.whatsapp}</p>}
                 </div>
