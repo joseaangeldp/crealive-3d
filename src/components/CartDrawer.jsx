@@ -21,6 +21,18 @@ export default function CartDrawer({ onClose }) {
 
         // ── 1. Guardar en Supabase PRIMERO (antes de redirigir) ──
         try {
+            // Garantizar que el cliente exista en la tabla clientes (evita FK violation)
+            if (user) {
+                const nombreCliente = profile?.nombre ||
+                    user.user_metadata?.full_name ||
+                    user.user_metadata?.name ||
+                    user.email?.split('@')[0] || ''
+                await supabase.from('clientes').upsert(
+                    { id: user.id, nombre: nombreCliente, email: user.email || '', whatsapp: profile?.whatsapp || null, activo: true },
+                    { onConflict: 'id', ignoreDuplicates: true }
+                )
+            }
+
             const pedidoData = {
                 producto_id: items[0].producto?.id,
                 producto_nombre: `Pedido múltiple (${items.length} items)`,
@@ -31,11 +43,13 @@ export default function CartDrawer({ onClose }) {
             }
             if (user) pedidoData.cliente_id = user.id
 
-            const { data: pedido } = await supabase
+            const { data: pedido, error: pedidoError } = await supabase
                 .from('pedidos')
                 .insert(pedidoData)
                 .select()
                 .single()
+
+            if (pedidoError) console.error('Error insertando pedido:', pedidoError.message)
 
             // Insertar items individuales
             if (pedido?.id) {

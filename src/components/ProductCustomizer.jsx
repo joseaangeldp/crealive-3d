@@ -84,6 +84,14 @@ export default function ProductCustomizer({ producto, onClose }) {
             const clienteWA = profile?.whatsapp || user?.user_metadata?.whatsapp || '(no registrado)'
 
             // ── 1. Guardar en Supabase PRIMERO ──
+            // Garantizar que el cliente exista (evita FK violation si es usuario de Google nuevo)
+            if (user) {
+                await supabase.from('clientes').upsert(
+                    { id: user.id, nombre: clienteNombre, email: user.email || '', whatsapp: profile?.whatsapp || null, activo: true },
+                    { onConflict: 'id', ignoreDuplicates: true }
+                )
+            }
+
             const pedidoData = {
                 producto_id: producto.id,
                 producto_nombre: producto.nombre,
@@ -94,7 +102,8 @@ export default function ProductCustomizer({ producto, onClose }) {
                 fecha: new Date().toISOString(),
             }
             if (user) pedidoData.cliente_id = user.id
-            await supabase.from('pedidos').insert(pedidoData)
+            const { error: pedidoError } = await supabase.from('pedidos').insert(pedidoData)
+            if (pedidoError) console.error('Error insertando pedido:', pedidoError.message)
 
             // ── 2. Construir y abrir WhatsApp DESPUÉS ──
             const msgLines = [
