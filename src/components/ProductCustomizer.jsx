@@ -1,6 +1,7 @@
 // ============================================================
 // src/components/ProductCustomizer.jsx — Modal de personalización
 // Galería de imágenes con lightbox + carrito y pedido directo
+// Colores configurables por producto + fix guardado de pedidos
 // ============================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -12,9 +13,34 @@ import { useCart } from '../contexts/CartContext'
 import './ProductCustomizer.css'
 
 export default function ProductCustomizer({ producto, onClose }) {
-    const { user } = useAuth()
+    const { user, profile } = useAuth()
     const { addItem } = useCart()
     const navigate = useNavigate()
+
+    // Determinar colores disponibles para este producto
+    const coloresDisponibles = (() => {
+        const disponibles = producto.colores_disponibles
+        const extra = Array.isArray(producto.colores_extra) ? producto.colores_extra : []
+
+        let base
+        if (Array.isArray(disponibles) && disponibles.length > 0) {
+            // Solo los colores estándar seleccionados por el admin
+            base = FILAMENT_COLORS.filter(c => disponibles.includes(c.hex))
+        } else if (disponibles === null || disponibles === undefined) {
+            // Todos los colores globales
+            base = FILAMENT_COLORS
+        } else {
+            // Array vacío → sin colores (a menos que haya extras)
+            base = []
+        }
+
+        // Mezclar con colores personalizados (evitar duplicados por hex)
+        const baseHexes = new Set(base.map(c => c.hex.toLowerCase()))
+        const extraFiltrados = extra.filter(c => !baseHexes.has(c.hex.toLowerCase()))
+        return [...base, ...extraFiltrados]
+    })()
+
+    const sinColores = coloresDisponibles.length === 0
 
     // Construir array de imágenes (imagenes[] + imagen_url como fallback)
     const allImages = (() => {
@@ -26,7 +52,7 @@ export default function ProductCustomizer({ producto, onClose }) {
 
     const [imgIndex, setImgIndex] = useState(0)
     const [lightbox, setLightbox] = useState(false)
-    const [colorElegido, setColorElegido] = useState(FILAMENT_COLORS[0])
+    const [colorElegido, setColorElegido] = useState(coloresDisponibles[0] || null)
     const [mensaje, setMensaje] = useState('')
     const [cantidad, setCantidad] = useState(1)
     const [enviando, setEnviando] = useState(false)
@@ -38,6 +64,7 @@ export default function ProductCustomizer({ producto, onClose }) {
 
     // ── AGREGAR AL CARRITO ──
     const handleAgregarCarrito = () => {
+        if (sinColores) return
         addItem({ producto, color: colorElegido, cantidad, mensaje })
         setToast(true)
         setTimeout(() => { setToast(false); onClose() }, 1200)
@@ -45,11 +72,27 @@ export default function ProductCustomizer({ producto, onClose }) {
 
     // ── ENVIAR PEDIDO DIRECTO ──
     const handleEnviarDirecto = async () => {
+        if (sinColores) return
         setError('')
         setEnviando(true)
         try {
-            const clienteNombre = user?.user_metadata?.nombre || 'Cliente'
-            const clienteWA = user?.user_metadata?.whatsapp || '(no registrado)'
+            const clienteNombre = profile?.nombre || user?.user_metadata?.nombre || 'Cliente'
+            const clienteWA = profile?.whatsapp || user?.user_metadata?.whatsapp || '(no registrado)'
+
+            // ── 1. Guardar en Supabase PRIMERO ──
+            const pedidoData = {
+                producto_id: producto.id,
+                producto_nombre: producto.nombre,
+                color_elegido: `${colorElegido.name} (${colorElegido.hex})`,
+                mensaje: mensaje.trim(),
+                cantidad,
+                estado: 'pendiente',
+                fecha: new Date().toISOString(),
+            }
+            if (user) pedidoData.cliente_id = user.id
+            await supabase.from('pedidos').insert(pedidoData)
+
+            // ── 2. Construir y abrir WhatsApp DESPUÉS ──
             const msgLines = [
                 `🖨️ *Nuevo pedido — Crealive 3D*`,
                 ``,
@@ -63,21 +106,10 @@ export default function ProductCustomizer({ producto, onClose }) {
             ].filter(Boolean).join('\n')
 
             const waUrl = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(msgLines)}`
-            window.location.href = waUrl
 
-            const pedidoData = {
-                producto_id: producto.id,
-                producto_nombre: producto.nombre,
-                color_elegido: `${colorElegido.name} (${colorElegido.hex})`,
-                mensaje: mensaje.trim(),
-                cantidad,
-                estado: 'pendiente',
-                fecha: new Date().toISOString(),
-            }
-            if (user) pedidoData.cliente_id = user.id
-            await supabase.from('pedidos').insert(pedidoData)
             onClose()
             navigate('/confirmacion')
+            window.open(waUrl, '_blank')
         } catch (err) {
             console.error(err)
             setError('Error al enviar el pedido. Intentá de nuevo.')
@@ -149,26 +181,49 @@ export default function ProductCustomizer({ producto, onClose }) {
                     <div className="customizer-img-placeholder">📦</div>
                 )}
 
-
                 {/* Selector de color */}
                 <div className="customizer-section">
                     <label className="form-label">Color de filamento</label>
-                    <div className="color-grid">
-                        {FILAMENT_COLORS.map(color => (
-                            <button
-                                key={color.hex}
-                                className={'color-dot' + (colorElegido.hex === color.hex ? ' selected' : '')}
-                                style={{ background: color.hex }}
-                                onClick={() => setColorElegido(color)}
-                                title={color.name}
-                                aria-label={color.name}
-                            />
-                        ))}
-                    </div>
-                    <p className="color-label">
-                        <span className="color-preview" style={{ background: colorElegido.hex }} />
-                        {colorElegido.name}
-                    </p>
+
+                    {sinColores ? (
+                        /* ── Sin colores disponibles ── */
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            background: 'var(--color-surface-2)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '12px 16px',
+                        }}>
+                            <span style={{ fontSize: 22 }}>🚫</span>
+                            <div>
+                                <p style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text)' }}>
+                                    Sin colores disponibles
+                                </p>
+                                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                                    Este producto no tiene stock de filamento en este momento.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="color-grid">
+                                {coloresDisponibles.map(color => (
+                                    <button
+                                        key={color.hex}
+                                        className={'color-dot' + (colorElegido?.hex === color.hex ? ' selected' : '')}
+                                        style={{ background: color.hex }}
+                                        onClick={() => setColorElegido(color)}
+                                        title={color.name}
+                                        aria-label={color.name}
+                                    />
+                                ))}
+                            </div>
+                            <p className="color-label">
+                                <span className="color-preview" style={{ background: colorElegido?.hex }} />
+                                {colorElegido?.name}
+                            </p>
+                        </>
+                    )}
                 </div>
 
                 {/* Instrucciones */}
@@ -182,6 +237,7 @@ export default function ProductCustomizer({ producto, onClose }) {
                         value={mensaje}
                         onChange={e => setMensaje(e.target.value)}
                         style={{ resize: 'vertical' }}
+                        disabled={sinColores}
                     />
                 </div>
 
@@ -189,7 +245,7 @@ export default function ProductCustomizer({ producto, onClose }) {
                 <div className="customizer-section form-group">
                     <label className="form-label" htmlFor="custom-qty">Cantidad</label>
                     <div className="qty-control">
-                        <button className="qty-btn" onClick={() => setCantidad(q => Math.max(1, q - 1))}>−</button>
+                        <button className="qty-btn" onClick={() => setCantidad(q => Math.max(1, q - 1))} disabled={sinColores}>−</button>
                         <input
                             id="custom-qty"
                             type="number"
@@ -197,16 +253,19 @@ export default function ProductCustomizer({ producto, onClose }) {
                             min={1} max={99}
                             value={cantidad}
                             onChange={e => setCantidad(Math.max(1, parseInt(e.target.value) || 1))}
+                            disabled={sinColores}
                         />
-                        <button className="qty-btn" onClick={() => setCantidad(q => Math.min(99, q + 1))}>+</button>
+                        <button className="qty-btn" onClick={() => setCantidad(q => Math.min(99, q + 1))} disabled={sinColores}>+</button>
                     </div>
                 </div>
 
                 {/* Total */}
-                <div className="customizer-total">
-                    <span>Total estimado</span>
-                    <strong>${(Number(producto.precio) * cantidad).toFixed(2)}</strong>
-                </div>
+                {!sinColores && (
+                    <div className="customizer-total">
+                        <span>Total estimado</span>
+                        <strong>${(Number(producto.precio) * cantidad).toFixed(2)}</strong>
+                    </div>
+                )}
 
                 {error && <div className="auth-error" style={{ marginBottom: '12px' }}>{error}</div>}
 
@@ -216,7 +275,7 @@ export default function ProductCustomizer({ producto, onClose }) {
                         className="btn btn-primary"
                         style={{ flex: 1 }}
                         onClick={handleAgregarCarrito}
-                        disabled={toast}
+                        disabled={toast || sinColores}
                     >
                         🛒 Agregar al carrito
                     </button>
@@ -224,7 +283,7 @@ export default function ProductCustomizer({ producto, onClose }) {
                         className="btn btn-outline"
                         style={{ flex: 1 }}
                         onClick={handleEnviarDirecto}
-                        disabled={enviando}
+                        disabled={enviando || sinColores}
                     >
                         {enviando ? 'Enviando...' : '📲 Enviar directo'}
                     </button>

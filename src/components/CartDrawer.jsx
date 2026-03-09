@@ -11,7 +11,7 @@ import './CartDrawer.css'
 
 export default function CartDrawer({ onClose }) {
     const { items, removeItem, updateQty, clearCart, itemCount } = useCart()
-    const { user } = useAuth()
+    const { user, profile } = useAuth()
     const navigate = useNavigate()
 
     const total = items.reduce((sum, i) => sum + (Number(i.producto?.precio || 0) * i.cantidad), 0)
@@ -19,14 +19,48 @@ export default function CartDrawer({ onClose }) {
     const handleEnviarPedido = async () => {
         if (items.length === 0) return
 
-        // ── 1. Construir mensaje de WhatsApp ──
-        const clienteNombre = user?.user_metadata?.nombre || 'Cliente'
-        const clienteWA = user?.user_metadata?.whatsapp || '(no registrado)'
+        // ── 1. Guardar en Supabase PRIMERO (antes de redirigir) ──
+        try {
+            const pedidoData = {
+                producto_id: items[0].producto?.id,
+                producto_nombre: `Pedido múltiple (${items.length} items)`,
+                color_elegido: '—',
+                cantidad: itemCount,
+                estado: 'pendiente',
+                fecha: new Date().toISOString(),
+            }
+            if (user) pedidoData.cliente_id = user.id
+
+            const { data: pedido } = await supabase
+                .from('pedidos')
+                .insert(pedidoData)
+                .select()
+                .single()
+
+            // Insertar items individuales
+            if (pedido?.id) {
+                const pedidoItems = items.map(item => ({
+                    pedido_id: pedido.id,
+                    producto_id: item.producto?.id,
+                    producto_nombre: item.producto?.nombre,
+                    color_elegido: item.color ? `${item.color.name} (${item.color.hex})` : '—',
+                    cantidad: item.cantidad,
+                    mensaje_especial: item.mensaje?.trim() || null,
+                }))
+                await supabase.from('pedido_items').insert(pedidoItems)
+            }
+        } catch (err) {
+            console.error('Error guardando pedido:', err)
+        }
+
+        // ── 2. Construir mensaje de WhatsApp ──
+        const clienteNombre = profile?.nombre || user?.user_metadata?.nombre || 'Cliente'
+        const clienteWA = profile?.whatsapp || user?.user_metadata?.whatsapp || '(no registrado)'
 
         const lineasItems = items.map((item, idx) => {
             const lineas = [
                 `*${idx + 1}. ${item.producto?.nombre}*`,
-                `   🎨 Color: ${item.color?.name}`,
+                `   🎨 Color: ${item.color?.name || '—'}`,
                 `   🔢 Cantidad: ${item.cantidad}`,
             ]
             if (item.mensaje?.trim()) lineas.push(`   📝 Nota: ${item.mensaje.trim()}`)
@@ -47,47 +81,12 @@ export default function CartDrawer({ onClose }) {
 
         const waUrl = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(msg)}`
 
-        // ── 2. Abrir WhatsApp ANTES del await ──
-        window.location.href = waUrl
-
-        // ── 3. Guardar en Supabase ──
-        try {
-            // Crear pedido "agrupador"
-            const pedidoData = {
-                producto_id: items[0].producto?.id,
-                producto_nombre: `Pedido múltiple (${items.length} items)`,
-                color_elegido: '—',
-                cantidad: itemCount,
-                estado: 'pendiente',
-                fecha: new Date().toISOString(),
-            }
-            if (user) pedidoData.cliente_id = user.id
-
-            const { data: pedido } = await supabase
-                .from('pedidos')
-                .insert(pedidoData)
-                .select()
-                .single()
-
-            // Insertar items individuales si la tabla existe
-            if (pedido?.id) {
-                const pedidoItems = items.map(item => ({
-                    pedido_id: pedido.id,
-                    producto_id: item.producto?.id,
-                    producto_nombre: item.producto?.nombre,
-                    color_elegido: `${item.color?.name} (${item.color?.hex})`,
-                    cantidad: item.cantidad,
-                    mensaje_especial: item.mensaje?.trim() || null,
-                }))
-                await supabase.from('pedido_items').insert(pedidoItems)
-            }
-        } catch (err) {
-            console.error('Error guardando pedido:', err)
-        }
-
         clearCart()
         onClose()
         navigate('/confirmacion')
+
+        // ── 3. Abrir WhatsApp AL FINAL ──
+        window.open(waUrl, '_blank')
     }
 
     return (

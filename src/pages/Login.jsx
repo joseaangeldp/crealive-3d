@@ -4,11 +4,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
 import './Auth.css'
 
 export default function Login() {
-    const { login } = useAuth()
+    const { login, loginWithGoogle } = useAuth()
     const navigate = useNavigate()
     const [form, setForm] = useState({ email: '', password: '' })
     const [error, setError] = useState('')
@@ -32,12 +31,13 @@ export default function Login() {
     }
 
     const handleGoogle = async () => {
-        setOauthLoading(true)
-        await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: `${window.location.origin}/` },
-        })
-        setOauthLoading(false)
+        try {
+            setOauthLoading(true)
+            await loginWithGoogle()
+        } catch (err) {
+            setError('Error al conectar con Google. Intentá de nuevo.')
+            setOauthLoading(false)
+        }
     }
 
     return (
