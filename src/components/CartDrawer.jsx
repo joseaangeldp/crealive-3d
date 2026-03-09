@@ -54,7 +54,11 @@ export default function CartDrawer({ onClose }) {
         }
 
         // ── 2. Construir mensaje de WhatsApp ──
-        const clienteNombre = profile?.nombre || user?.user_metadata?.nombre || 'Cliente'
+        const clienteNombre = profile?.nombre ||
+            user?.user_metadata?.full_name ||
+            user?.user_metadata?.name ||
+            user?.email?.split('@')[0] ||
+            'Cliente'
         const clienteWA = profile?.whatsapp || user?.user_metadata?.whatsapp || '(no registrado)'
 
         const lineasItems = items.map((item, idx) => {

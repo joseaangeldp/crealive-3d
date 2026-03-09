@@ -76,7 +76,11 @@ export default function ProductCustomizer({ producto, onClose }) {
         setError('')
         setEnviando(true)
         try {
-            const clienteNombre = profile?.nombre || user?.user_metadata?.nombre || 'Cliente'
+            const clienteNombre = profile?.nombre ||
+                user?.user_metadata?.full_name ||
+                user?.user_metadata?.name ||
+                user?.email?.split('@')[0] ||
+                'Cliente'
             const clienteWA = profile?.whatsapp || user?.user_metadata?.whatsapp || '(no registrado)'
 
             // ── 1. Guardar en Supabase PRIMERO ──

@@ -31,24 +31,17 @@ export function AuthProvider({ children }) {
         const provider = user.app_metadata?.provider
         if (provider !== 'google') return
 
-        // Datos del perfil de Google
-        const nombre = user.user_metadata?.full_name || user.user_metadata?.name || ''
+        const nombre = user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split('@')[0] || ''
         const email = user.email || ''
-        const avatarUrl = user.user_metadata?.avatar_url || null
 
-        // Upsert: crea la fila si no existe, la actualiza si ya existe
-        await supabase.from('clientes').upsert(
-            {
-                id: user.id,
-                nombre,
-                email,
-                whatsapp: null,
-                activo: true,
-                fecha_registro: new Date().toISOString(),
-                avatar_url: avatarUrl,
-            },
+        // Upsert sin avatar_url para evitar error si la columna no existe
+        const { error } = await supabase.from('clientes').upsert(
+            { id: user.id, nombre, email, whatsapp: null, activo: true, fecha_registro: new Date().toISOString() },
             { onConflict: 'id', ignoreDuplicates: false }
         )
+        if (error) console.warn('upsertClienteGoogle error:', error.message)
     }
 
     useEffect(() => {
