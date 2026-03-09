@@ -20,13 +20,16 @@ export default function Profile() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        if (!user) return
+        if (!user) { setLoading(false); return }
         Promise.all([
             supabase.from('clientes').select('*').eq('id', user.id).single(),
             supabase.from('pedidos').select('*').eq('cliente_id', user.id).order('fecha', { ascending: false }),
         ]).then(([{ data: c }, { data: p }]) => {
             setCliente(c)
             setPedidos(p || [])
+        }).catch(err => {
+            console.warn('Error cargando perfil o pedidos:', err)
+        }).finally(() => {
             setLoading(false)
         })
     }, [user])
