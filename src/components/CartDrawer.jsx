@@ -86,7 +86,7 @@ export default function CartDrawer({ onClose }) {
         navigate('/confirmacion')
 
         // ── 3. Abrir WhatsApp AL FINAL ──
-        window.open(waUrl, '_blank')
+        window.location.href = waUrl
     }
 
     return (

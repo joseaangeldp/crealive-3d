@@ -109,7 +109,7 @@ export default function ProductCustomizer({ producto, onClose }) {
 
             onClose()
             navigate('/confirmacion')
-            window.open(waUrl, '_blank')
+            window.location.href = waUrl
         } catch (err) {
             console.error(err)
             setError('Error al enviar el pedido. Intentá de nuevo.')
