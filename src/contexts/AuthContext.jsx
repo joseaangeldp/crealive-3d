@@ -57,22 +57,29 @@ export function AuthProvider({ children }) {
             setSession(session)
             setUser(session?.user ?? null)
             if (session?.user) {
-                await upsertClienteGoogle(session.user)
-                await fetchProfile(session.user.id)
+                try {
+                    await upsertClienteGoogle(session.user)
+                    await fetchProfile(session.user.id)
+                } catch (e) {
+                    console.warn('Error cargando perfil:', e)
+                }
             }
             setLoading(false)
-        })
+        }).catch(() => setLoading(false))
 
         // Escuchar cambios de sesión (incluye el redirect de Google)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setSession(session)
             setUser(session?.user ?? null)
             if (session?.user) {
-                // Si viene de Google, crear el perfil en clientes
-                if (_event === 'SIGNED_IN') {
-                    await upsertClienteGoogle(session.user)
+                try {
+                    if (_event === 'SIGNED_IN') {
+                        await upsertClienteGoogle(session.user)
+                    }
+                    await fetchProfile(session.user.id)
+                } catch (e) {
+                    console.warn('Error en auth state change:', e)
                 }
-                await fetchProfile(session.user.id)
             } else {
                 setProfile(null)
             }
