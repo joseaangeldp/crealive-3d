@@ -236,3 +236,78 @@
 .home-cta__inner .btn-primary:hover {
     background: rgba(255, 255, 255, 0.9);
 }
+
+/* ─── Más Vendidos ─── */
+.mas-vendidos {
+    background: var(--color-bg);
+}
+
+.mas-vendidos__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.mas-vendidos__ver-todos {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.mas-vendidos__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.mas-vendidos__item {
+    position: relative;
+}
+
+/* Badge N°1 */
+.badge-top {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    z-index: 2;
+    background: linear-gradient(135deg, #f5a623 0%, #f76b1c 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 3px 12px;
+    border-radius: var(--radius-full);
+    box-shadow: 0 2px 8px rgba(247, 107, 28, 0.4);
+    pointer-events: none;
+}
+
+/* Scroll horizontal en mobile */
+@media (max-width: 900px) {
+    .mas-vendidos__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 580px) {
+    .mas-vendidos__grid {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 14px;
+        padding-bottom: 12px;
+        /* Hide scrollbar but keep scroll */
+        scrollbar-width: none;
+    }
+
+    .mas-vendidos__grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mas-vendidos__item {
+        min-width: 240px;
+        scroll-snap-align: start;
+    }
+}
