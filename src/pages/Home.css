@@ -128,10 +128,24 @@
     text-align: center;
 }
 
-.feature-emoji {
-    font-size: 36px;
-    display: block;
-    margin-bottom: 12px;
+.feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(196, 118, 138, 0.12) 0%, rgba(196, 118, 138, 0.06) 100%);
+    color: var(--color-wine);
+    margin: 0 auto 16px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.feature-icon svg {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
 }
 
 .feature-card h3 {
@@ -184,10 +198,24 @@
     opacity: 0.6;
 }
 
-.step-emoji {
-    font-size: 36px;
-    display: block;
-    margin-bottom: 14px;
+.step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(196, 118, 138, 0.12) 0%, rgba(196, 118, 138, 0.06) 100%);
+    color: var(--color-wine);
+    margin: 0 auto 16px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.step-icon svg {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
 }
 
 .step-card h3 {
