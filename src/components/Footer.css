@@ -1,0 +1,253 @@
+/* ============================================================
+   src/components/Footer.css — Footer global
+   ============================================================ */
+
+.site-footer {
+    background: linear-gradient(180deg, #1c1c24 0%, #13131a 100%);
+    color: #fff;
+    margin-top: 0;
+    /* Espacio para BottomNav en mobile */
+    padding-bottom: 72px;
+}
+
+@media (min-width: 768px) {
+    .site-footer {
+        padding-bottom: 0;
+    }
+}
+
+/* ─── Inner grid ─── */
+.footer-inner {
+    display: grid;
+    grid-template-columns: 1.9fr 1fr 1.3fr;
+    gap: 52px;
+    padding-top: 60px;
+    padding-bottom: 52px;
+}
+
+@media (max-width: 860px) {
+    .footer-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+        padding-top: 44px;
+        padding-bottom: 36px;
+    }
+
+    .footer-brand {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-inner {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+}
+
+/* ─── Marca ─── */
+.footer-logo {
+    display: block;
+    font-family: var(--font-display, 'Playfair Display', serif);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+    margin-bottom: 12px;
+}
+
+.footer-tagline {
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 28px;
+    max-width: 240px;
+}
+
+/* ─── Redes sociales — fila de íconos ─── */
+.footer-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.footer-social-link {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px 8px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background 0.2s, color 0.2s, transform 0.2s, border-color 0.2s;
+    white-space: nowrap;
+}
+
+.footer-social-link svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+}
+
+.footer-social-link:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Colores individuales por red */
+.footer-social-link--instagram:hover {
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+}
+
+.footer-social-link--facebook:hover {
+    background: #1877f2;
+}
+
+.footer-social-link--tiktok:hover {
+    background: #000;
+    border-color: #69c9d0;
+}
+
+
+.footer-social-link--whatsapp:hover {
+    background: #25d366;
+}
+
+.footer-social-name {
+    font-family: var(--font-body, sans-serif);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+/* ─── Columnas ─── */
+.footer-col-title {
+    font-family: var(--font-body, sans-serif);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 18px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.footer-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: #fff;
+}
+
+.footer-links a svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.65;
+}
+
+/* ─── Botón WhatsApp en columna de contacto ─── */
+.footer-wa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: #25d366;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.32);
+}
+
+.footer-wa-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.footer-wa-btn:hover {
+    background: #1da851;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.42);
+}
+
+/* ─── Separador decorativo ─── */
+.footer-divider {
+    height: 1px;
+    margin: 0 20px;
+    background: linear-gradient(to right,
+            transparent 0%,
+            rgba(196, 118, 138, 0.35) 30%,
+            rgba(168, 200, 232, 0.35) 70%,
+            transparent 100%);
+}
+
+/* ─── Barra de copyright ─── */
+.footer-bottom {
+    padding: 20px 0;
+}
+
+.footer-bottom__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.footer-bottom__print {
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.footer-bottom__print svg {
+    width: 18px;
+    height: 18px;
+}
+
+.footer-bottom p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0;
+}
+
+.footer-made-with {
+    font-style: italic;
+}
+
+@media (max-width: 480px) {
+    .footer-bottom__inner {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .footer-bottom__print {
+        display: none;
+    }
+}
