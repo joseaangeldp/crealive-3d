@@ -3,10 +3,11 @@
 // Banners del carrusel principal de la home
 // ============================================================
 import { useEffect, useState } from 'react'
-import { HiPlus, HiPencil, HiTrash } from 'react-icons/hi'
+import { HiPlus, HiPencil, HiTrash, HiUpload } from 'react-icons/hi'
 import { supabase } from '../../lib/supabase'
 
 const EMPTY_FORM = { titulo: '', descripcion: '', imagen_url: '', activo: true, orden: 0 }
+const BUCKET = 'colecciones'
 
 export default function AdminCollections() {
     const [colecciones, setColecciones] = useState([])
@@ -15,6 +16,8 @@ export default function AdminCollections() {
     const [editItem, setEditItem] = useState(null)
     const [form, setForm] = useState(EMPTY_FORM)
     const [saving, setSaving] = useState(false)
+    const [uploading, setUploading] = useState(false)
+    const [uploadError, setUploadError] = useState('')
 
     const fetchColecciones = () => {
         supabase.from('colecciones').select('*').order('orden')
@@ -22,13 +25,34 @@ export default function AdminCollections() {
     }
     useEffect(fetchColecciones, [])
 
-    const openNew = () => { setForm(EMPTY_FORM); setEditItem(null); setShowForm(true) }
-    const openEdit = c => { setForm(c); setEditItem(c.id); setShowForm(true) }
-    const closeForm = () => { setShowForm(false); setEditItem(null) }
+    const openNew = () => { setForm(EMPTY_FORM); setEditItem(null); setShowForm(true); setUploadError('') }
+    const openEdit = c => { setForm(c); setEditItem(c.id); setShowForm(true); setUploadError('') }
+    const closeForm = () => { setShowForm(false); setEditItem(null); setUploadError('') }
 
     const handleChange = e => {
         const { name, value, type, checked } = e.target
         setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }))
+    }
+
+    // ── Subir imagen a Supabase Storage ──
+    const handleImageUpload = async e => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        setUploading(true)
+        setUploadError('')
+        try {
+            const ext = file.name.split('.').pop()
+            const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET).upload(fileName, file, { upsert: true })
+            if (uploadError) throw uploadError
+            const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
+            setForm(f => ({ ...f, imagen_url: data.publicUrl }))
+        } catch (err) {
+            setUploadError(`Error al subir imagen: ${err.message}`)
+        } finally {
+            setUploading(false)
+        }
     }
 
     const handleSave = async e => {
@@ -77,19 +101,73 @@ export default function AdminCollections() {
                             <label className="form-label">Descripción</label>
                             <textarea name="descripcion" className="form-input" rows={2} value={form.descripcion} onChange={handleChange} style={{ resize: 'vertical' }} />
                         </div>
+
+                        {/* ── Imagen de la colección ── */}
                         <div className="form-group">
-                            <label className="form-label">URL de imagen</label>
-                            <input name="imagen_url" type="url" className="form-input" placeholder="https://..." value={form.imagen_url} onChange={handleChange} />
+                            <label className="form-label">Imagen de la colección</label>
+
+                            {/* Preview */}
+                            {form.imagen_url && (
+                                <div style={{ position: 'relative', display: 'inline-block', marginBottom: 10 }}>
+                                    <img
+                                        src={form.imagen_url}
+                                        alt="preview"
+                                        style={{ height: 120, width: '100%', borderRadius: 10, objectFit: 'cover', display: 'block' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setForm(f => ({ ...f, imagen_url: '' }))}
+                                        style={{
+                                            position: 'absolute', top: -8, right: -8,
+                                            width: 22, height: 22, background: '#ef4444', color: '#fff',
+                                            border: 'none', borderRadius: '50%', fontSize: 13, cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Botón de subida */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                <label
+                                    className="btn btn-outline"
+                                    style={{ cursor: uploading ? 'not-allowed' : 'pointer', fontSize: 13, padding: '8px 14px', display: 'inline-flex', alignItems: 'center', gap: 6, opacity: uploading ? 0.7 : 1 }}
+                                >
+                                    <HiUpload />
+                                    {uploading ? 'Subiendo...' : 'Subir imagen'}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        style={{ display: 'none' }}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                                <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>o pegá una URL:</span>
+                                <input
+                                    name="imagen_url"
+                                    type="url"
+                                    className="form-input"
+                                    placeholder="https://..."
+                                    value={form.imagen_url}
+                                    onChange={handleChange}
+                                    style={{ flex: 1, minWidth: 180 }}
+                                />
+                            </div>
+
+                            {uploadError && (
+                                <p style={{ fontSize: 12, color: '#ef4444', marginTop: 6 }}>⚠️ {uploadError}</p>
+                            )}
                         </div>
-                        {form.imagen_url && (
-                            <img src={form.imagen_url} alt="preview" style={{ height: 100, borderRadius: 10, objectFit: 'cover', width: '100%' }} />
-                        )}
+
                         <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
                             <input type="checkbox" name="activo" checked={form.activo} onChange={handleChange} />
                             Mostrar en carrusel
                         </label>
                         <div className="admin-form-actions">
-                            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
+                            <button type="submit" className="btn btn-primary" disabled={saving || uploading}>{saving ? 'Guardando...' : 'Guardar'}</button>
                             <button type="button" className="btn btn-outline" onClick={closeForm}>Cancelar</button>
                         </div>
                     </form>
