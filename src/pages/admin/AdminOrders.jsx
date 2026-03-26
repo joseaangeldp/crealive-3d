@@ -100,6 +100,15 @@ export default function AdminOrders() {
         setLoadingItems(false)
     }
 
+    const eliminarPedido = async (pedido) => {
+        const cliente = pedido.clientes?.nombre || 'este pedido'
+        if (!window.confirm(`¿Eliminar ${cliente} — ${pedido.producto_nombre}? Esta acción no se puede deshacer.`)) return
+        // Borrar items primero (FK constraint)
+        await supabase.from('pedido_items').delete().eq('pedido_id', pedido.id)
+        await supabase.from('pedidos').delete().eq('id', pedido.id)
+        setPedidos(prev => prev.filter(p => p.id !== pedido.id))
+    }
+
     const formatFecha = iso => new Date(iso).toLocaleDateString('es-AR', {
         day: '2-digit', month: 'short', year: 'numeric'
     })
@@ -143,6 +152,7 @@ export default function AdminOrders() {
                                 <th>Mensaje</th>
                                 <th>Estado</th>
                                 <th>Detalle</th>
+                                <th>Eliminar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -208,6 +218,20 @@ export default function AdminOrders() {
                                                 🔗 Link
                                             </button>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <button
+                                            onClick={() => eliminarPedido(p)}
+                                            title="Eliminar pedido"
+                                            style={{
+                                                fontSize: '13px', color: '#EF4444',
+                                                background: '#FEF2F2', border: '1px solid #FECACA',
+                                                borderRadius: 6, padding: '4px 10px', cursor: 'pointer',
+                                                fontFamily: 'var(--font-body)', fontWeight: 600,
+                                            }}
+                                        >
+                                            🗑️
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

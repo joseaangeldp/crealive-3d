@@ -1,0 +1,371 @@
+/* ============================================================
+   src/pages/ProductDetail.css — Estilos de la página de detalle
+   ============================================================ */
+
+.product-detail-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+}
+
+/* Breadcrumb */
+.product-detail-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+.product-detail-breadcrumb a {
+    color: var(--color-wine);
+    text-decoration: none;
+}
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 0;
+    transition: color 0.15s;
+}
+.back-btn:hover { color: var(--color-wine); }
+.breadcrumb-sep { opacity: 0.4; }
+
+/* Grid principal */
+.product-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+}
+
+@media (max-width: 720px) {
+    .product-detail-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+}
+
+/* Galería */
+.gallery-main {
+    position: relative;
+    border-radius: var(--radius-lg, 16px);
+    overflow: hidden;
+    background: var(--color-surface-2);
+    aspect-ratio: 1 / 1;
+}
+.gallery-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.gallery-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 72px;
+    width: 100%;
+    height: 100%;
+}
+.gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: background 0.2s;
+    z-index: 2;
+}
+.gallery-nav:hover { background: #fff; }
+.gallery-nav--left { left: 10px; }
+.gallery-nav--right { right: 10px; }
+.gallery-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+.limited-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, #C4768A, #8B5CF6);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(196,118,138,0.4);
+}
+
+/* Miniaturas */
+.gallery-thumbs {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+.gallery-thumb-btn {
+    width: 60px;
+    height: 52px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid var(--color-border);
+    cursor: pointer;
+    padding: 0;
+    background: none;
+    transition: border-color 0.15s;
+}
+.gallery-thumb-btn.active {
+    border-color: var(--color-wine);
+}
+.gallery-thumb-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Edición limitada banner */
+.edition-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(196,118,138,0.1), rgba(139,92,246,0.1));
+    border: 1px solid rgba(196,118,138,0.3);
+    border-radius: var(--radius-md, 12px);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 18px;
+}
+.edition-banner > div { flex: 1; }
+.edition-banner strong { display: block; font-size: 14px; color: var(--color-wine); }
+.edition-banner p { font-size: 12px; color: var(--color-text-muted); margin: 4px 0 0; }
+.edition-stock { color: var(--color-wine) !important; font-weight: 600; }
+
+/* Categoría */
+.product-category-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-wine);
+    background: rgba(196,118,138,0.1);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+/* Nombre y precio */
+.product-detail-name {
+    font-family: var(--font-display);
+    font-size: 28px;
+    margin: 0 0 8px;
+    line-height: 1.2;
+    color: var(--color-text);
+}
+.product-detail-price {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--color-wine);
+    margin: 0 0 14px;
+}
+.price-extra {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin-left: 4px;
+}
+.product-detail-desc {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* Secciones */
+.detail-section {
+    margin-bottom: 20px;
+}
+.detail-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--color-text);
+}
+
+/* Selector de color */
+.color-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.color-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2.5px solid var(--color-border);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+}
+.color-swatch:hover { transform: scale(1.12); }
+.color-swatch.selected {
+    border-color: var(--color-wine);
+    transform: scale(1.15);
+    box-shadow: 0 0 0 3px rgba(196,118,138,0.25);
+}
+.color-swatch.edition-swatch {
+    box-shadow: 0 0 0 2px rgba(139,92,246,0.4);
+}
+.color-name-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+.color-dot-preview {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.1);
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* Sin stock */
+.no-stock-banner {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 12px);
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+/* Selector de talla */
+.size-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.size-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 18px;
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.15s;
+    min-width: 72px;
+}
+.size-btn:hover {
+    border-color: var(--color-wine);
+    background: rgba(196,118,138,0.06);
+}
+.size-btn.selected {
+    border-color: var(--color-wine);
+    background: rgba(196,118,138,0.1);
+    color: var(--color-wine);
+}
+.size-name { font-weight: 700; font-size: 14px; }
+.size-medidas { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+.size-extra { font-size: 11px; color: var(--color-wine); margin-top: 2px; }
+
+/* Cantidad */
+.qty-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.qty-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text);
+    transition: background 0.15s;
+}
+.qty-btn:hover { background: rgba(196,118,138,0.1); border-color: var(--color-wine); }
+.qty-input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 16px;
+    font-family: var(--font-body);
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+/* Total */
+.detail-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md, 12px);
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    font-size: 15px;
+}
+.detail-total strong {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-wine);
+}
+
+/* Botón pedir */
+.btn-pedir {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+/* Hint login */
+.login-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 8px;
+}
+.login-hint a {
+    color: var(--color-wine);
+    text-decoration: underline;
+}

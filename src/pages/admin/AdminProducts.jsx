@@ -1,11 +1,10 @@
 // ============================================================
 // src/pages/admin/AdminProducts.jsx — CRUD de productos
-// Incluye barra de búsqueda, imágenes múltiples y colores por producto
+// Colores desde filament_colors (Supabase) + tallas por producto
 // ============================================================
 import { useEffect, useState } from 'react'
-import { HiPlus, HiPencil, HiEye, HiEyeOff, HiSearch, HiUpload } from 'react-icons/hi'
+import { HiPlus, HiPencil, HiEye, HiEyeOff, HiSearch, HiUpload, HiTrash } from 'react-icons/hi'
 import { supabase } from '../../lib/supabase'
-import { FILAMENT_COLORS } from '../../config'
 
 const EMPTY_FORM = {
     nombre: '', categoria: '', descripcion: '', precio: '',
@@ -13,12 +12,16 @@ const EMPTY_FORM = {
     colores_disponibles: null,   // null = todos, [] = ninguno, [hex, …] = selección
     colores_extra: [],           // [{name, hex}] colores totalmente nuevos
     activo: true,
+    tiene_tallas: false,
+    tallas: [],                  // [{nombre, medidas, precio_extra}]
 }
 const BUCKET = 'productos'
+const EMPTY_TALLA = { nombre: '', medidas: '', precio_extra: 0 }
 
 export default function AdminProducts() {
     const [productos, setProductos] = useState([])
     const [categorias, setCategorias] = useState([])
+    const [filamentColors, setFilamentColors] = useState([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [showForm, setShowForm] = useState(false)
@@ -31,6 +34,8 @@ export default function AdminProducts() {
     const [nuevoColorHex, setNuevoColorHex] = useState('#A8C8E8')
     const [nuevoColorNombre, setNuevoColorNombre] = useState('')
     const [colorNombreError, setColorNombreError] = useState('')
+    // Estado de nueva talla
+    const [nuevaTalla, setNuevaTalla] = useState(EMPTY_TALLA)
 
     // Modo de colores: 'todos' | 'seleccion' | 'ninguno'
     const colorMode = (() => {
@@ -49,21 +54,30 @@ export default function AdminProducts() {
             .then(({ data }) => setCategorias((data || []).map(c => c.nombre)))
     }
 
-    useEffect(() => { fetchProductos(); fetchCategorias() }, [])
+    const fetchColors = () => {
+        supabase.from('filament_colors').select('*').eq('disponible', true).order('orden')
+            .then(({ data }) => setFilamentColors(data || []))
+    }
+
+    useEffect(() => { fetchProductos(); fetchCategorias(); fetchColors() }, [])
 
     const openNew = () => {
         setForm({ ...EMPTY_FORM, categoria: categorias[0] || '' })
         setEditItem(null); setShowForm(true); setSaveError('')
         setNuevoColorHex('#A8C8E8'); setNuevoColorNombre(''); setColorNombreError('')
+        setNuevaTalla(EMPTY_TALLA)
     }
     const openEdit = p => {
         setForm({
             ...p,
             colores_disponibles: p.colores_disponibles ?? null,
             colores_extra: Array.isArray(p.colores_extra) ? p.colores_extra : [],
+            tiene_tallas: p.tiene_tallas || false,
+            tallas: Array.isArray(p.tallas) ? p.tallas : [],
         })
         setEditItem(p.id); setShowForm(true); setSaveError('')
         setNuevoColorHex('#A8C8E8'); setNuevoColorNombre(''); setColorNombreError('')
+        setNuevaTalla(EMPTY_TALLA)
     }
     const closeForm = () => { setShowForm(false); setEditItem(null); setSaveError('') }
 
@@ -76,7 +90,7 @@ export default function AdminProducts() {
     const handleColorMode = (mode) => {
         if (mode === 'todos') setForm(f => ({ ...f, colores_disponibles: null }))
         else if (mode === 'ninguno') setForm(f => ({ ...f, colores_disponibles: [], colores_extra: [] }))
-        else setForm(f => ({ ...f, colores_disponibles: f.colores_disponibles?.length > 0 ? f.colores_disponibles : [FILAMENT_COLORS[0].hex] }))
+        else setForm(f => ({ ...f, colores_disponibles: f.colores_disponibles?.length > 0 ? f.colores_disponibles : filamentColors[0] ? [filamentColors[0].hex] : [] }))
     }
 
     // ── Agregar color personalizado ──
@@ -101,6 +115,17 @@ export default function AdminProducts() {
             const nuevo = actual.includes(hex) ? actual.filter(h => h !== hex) : [...actual, hex]
             return { ...f, colores_disponibles: nuevo }
         })
+    }
+
+    // ── Agregar talla ──
+    const agregarTalla = () => {
+        if (!nuevaTalla.nombre.trim()) return
+        setForm(f => ({ ...f, tallas: [...(f.tallas || []), { ...nuevaTalla, precio_extra: Number(nuevaTalla.precio_extra) || 0 }] }))
+        setNuevaTalla(EMPTY_TALLA)
+    }
+
+    const eliminarTalla = (idx) => {
+        setForm(f => ({ ...f, tallas: f.tallas.filter((_, i) => i !== idx) }))
     }
 
     // ── Subir imágenes a Supabase Storage (múltiples) ──
@@ -147,6 +172,8 @@ export default function AdminProducts() {
                 ...form,
                 precio: parseFloat(form.precio),
                 colores_disponibles: form.colores_disponibles,
+                tiene_tallas: form.tiene_tallas,
+                tallas: form.tallas || [],
             }
             let result
             if (editItem) {
@@ -273,12 +300,8 @@ export default function AdminProducts() {
                                         type="button"
                                         onClick={() => handleColorMode(opt.id)}
                                         style={{
-                                            padding: '6px 14px',
-                                            fontSize: 12,
-                                            fontWeight: 600,
-                                            borderRadius: 20,
-                                            border: '1.5px solid',
-                                            cursor: 'pointer',
+                                            padding: '6px 14px', fontSize: 12, fontWeight: 600,
+                                            borderRadius: 20, border: '1.5px solid', cursor: 'pointer',
                                             fontFamily: 'var(--font-body)',
                                             borderColor: colorMode === opt.id ? 'var(--color-wine)' : 'var(--color-border)',
                                             background: colorMode === opt.id ? 'var(--color-wine)' : 'transparent',
@@ -297,44 +320,41 @@ export default function AdminProducts() {
                                     <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 10 }}>
                                         Hacé clic en los colores para activarlos o desactivarlos:
                                     </p>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                                        {FILAMENT_COLORS.map(color => {
-                                            const activo = Array.isArray(form.colores_disponibles) && form.colores_disponibles.includes(color.hex)
-                                            return (
-                                                <button
-                                                    key={color.hex}
-                                                    type="button"
-                                                    onClick={() => toggleColor(color.hex)}
-                                                    title={color.name}
-                                                    style={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        gap: 4,
-                                                        padding: '6px',
-                                                        border: activo ? '2px solid var(--color-wine)' : '2px solid var(--color-border)',
-                                                        borderRadius: 10,
-                                                        background: activo ? 'rgba(196,118,138,0.08)' : 'transparent',
-                                                        cursor: 'pointer',
-                                                        opacity: activo ? 1 : 0.5,
-                                                        transition: 'all 0.15s',
-                                                        minWidth: 52,
-                                                    }}
-                                                >
-                                                    <span style={{
-                                                        width: 28, height: 28, borderRadius: '50%',
-                                                        background: color.hex,
-                                                        border: '1px solid rgba(0,0,0,0.1)',
-                                                        display: 'block',
-                                                    }} />
-                                                    <span style={{ fontSize: 9, color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.2 }}>
-                                                        {color.name}
-                                                    </span>
-                                                    {activo && <span style={{ fontSize: 10, color: 'var(--color-wine)' }}>✓</span>}
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
+                                    {filamentColors.length === 0 ? (
+                                        <p style={{ fontSize: 12, color: '#ef4444' }}>
+                                            ⚠️ No hay colores en la tabla filament_colors. Agregá colores desde /admin/colores primero.
+                                        </p>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                            {filamentColors.map(color => {
+                                                const activo = Array.isArray(form.colores_disponibles) && form.colores_disponibles.includes(color.hex)
+                                                return (
+                                                    <button
+                                                        key={color.hex}
+                                                        type="button"
+                                                        onClick={() => toggleColor(color.hex)}
+                                                        title={color.name}
+                                                        style={{
+                                                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                                                            padding: '6px', border: activo ? '2px solid var(--color-wine)' : '2px solid var(--color-border)',
+                                                            borderRadius: 10, background: activo ? 'rgba(196,118,138,0.08)' : 'transparent',
+                                                            cursor: 'pointer', opacity: activo ? 1 : 0.5,
+                                                            transition: 'all 0.15s', minWidth: 52,
+                                                        }}
+                                                    >
+                                                        <span style={{
+                                                            width: 28, height: 28, borderRadius: '50%',
+                                                            background: color.hex, border: '1px solid rgba(0,0,0,0.1)', display: 'block',
+                                                        }} />
+                                                        <span style={{ fontSize: 9, color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.2 }}>
+                                                            {color.name}
+                                                        </span>
+                                                        {activo && <span style={{ fontSize: 10, color: 'var(--color-wine)' }}>✓</span>}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
                                     {Array.isArray(form.colores_disponibles) && form.colores_disponibles.length === 0 && (
                                         <p style={{ fontSize: 12, color: '#ef4444', marginTop: 8 }}>
                                             ⚠️ No seleccionaste ningún color — esto es equivalente a "Sin colores".
@@ -343,15 +363,14 @@ export default function AdminProducts() {
                                 </div>
                             )}
 
-                            {/* Vista previa para modo 'todos' o 'ninguno' */}
                             {colorMode === 'todos' && (
                                 <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                                    Se mostrarán los {FILAMENT_COLORS.length} colores globales del catálogo.
+                                    Se mostrarán los {filamentColors.length} colores disponibles del catálogo.
                                 </p>
                             )}
                             {colorMode === 'ninguno' && (
                                 <p style={{ fontSize: 12, color: '#ef4444' }}>
-                                    🚫 El producto aparecerá como sin stock de filamento. Los clientes no podrán hacer pedidos.
+                                    🚫 El producto aparecerá como sin stock de filamento.
                                 </p>
                             )}
 
@@ -360,23 +379,19 @@ export default function AdminProducts() {
                                 <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
                                     <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>➕ Agregar color personalizado</p>
                                     <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
-                                        ¿Tenés un filamento que no está en la lista? Agregalo con su nombre y color exacto.
+                                        ¿Tenés un filamento que no está en la lista global? Agregalo solo para este producto.
                                     </p>
 
-                                    {/* Colores custom ya agregados */}
                                     {(form.colores_extra || []).length > 0 && (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                                             {(form.colores_extra || []).map(c => (
                                                 <div key={c.hex} style={{
                                                     display: 'flex', alignItems: 'center', gap: 6,
                                                     padding: '5px 10px', borderRadius: 20,
-                                                    background: 'var(--color-surface-2)',
-                                                    border: '1px solid var(--color-border)',
-                                                    fontSize: 12,
+                                                    background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', fontSize: 12,
                                                 }}>
                                                     <span style={{ width: 14, height: 14, borderRadius: '50%', background: c.hex, border: '1px solid rgba(0,0,0,0.15)', flexShrink: 0 }} />
                                                     <span style={{ fontWeight: 600 }}>{c.name}</span>
-                                                    <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{c.hex}</span>
                                                     <button type="button" onClick={() => eliminarColorCustom(c.hex)}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 14, lineHeight: 1, padding: 0, marginLeft: 2 }}>×</button>
                                                 </div>
@@ -384,16 +399,11 @@ export default function AdminProducts() {
                                         </div>
                                     )}
 
-                                    {/* Formulario para nuevo color */}
                                     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                                         <div>
                                             <label style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Color</label>
-                                            <input
-                                                type="color"
-                                                value={nuevoColorHex}
-                                                onChange={e => setNuevoColorHex(e.target.value)}
-                                                style={{ width: 48, height: 36, border: '1px solid var(--color-border)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
-                                            />
+                                            <input type="color" value={nuevoColorHex} onChange={e => setNuevoColorHex(e.target.value)}
+                                                style={{ width: 48, height: 36, border: '1px solid var(--color-border)', borderRadius: 8, cursor: 'pointer', padding: 2 }} />
                                         </div>
                                         <div style={{ flex: 1, minWidth: 140 }}>
                                             <label style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Nombre del color</label>
@@ -406,16 +416,101 @@ export default function AdminProducts() {
                                                 style={{ padding: '7px 12px', fontSize: 13 }}
                                             />
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={agregarColorCustom}
-                                            className="btn btn-primary"
-                                            style={{ padding: '8px 16px', fontSize: 13 }}
-                                        >
+                                        <button type="button" onClick={agregarColorCustom} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 13 }}>
                                             + Agregar
                                         </button>
                                     </div>
                                     {colorNombreError && <p style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>⚠️ {colorNombreError}</p>}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── TALLAS ── */}
+                        <div className="form-group" style={{ borderTop: '1px solid var(--color-border)', paddingTop: 20 }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, marginBottom: 12 }}>
+                                <input type="checkbox" name="tiene_tallas" checked={form.tiene_tallas} onChange={handleChange} />
+                                <strong>¿Este producto tiene tallas?</strong>
+                            </label>
+
+                            {form.tiene_tallas && (
+                                <div>
+                                    <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
+                                        Definí las tallas disponibles con su nombre, medidas y precio extra (puede ser 0).
+                                    </p>
+
+                                    {/* Tabla de tallas ya agregadas */}
+                                    {form.tallas.length > 0 && (
+                                        <div style={{ marginBottom: 16 }}>
+                                            <table className="admin-table" style={{ fontSize: 13 }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Talla</th>
+                                                        <th>Medidas</th>
+                                                        <th>Precio extra ($)</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {form.tallas.map((t, i) => (
+                                                        <tr key={i}>
+                                                            <td style={{ fontWeight: 600 }}>{t.nombre}</td>
+                                                            <td style={{ color: 'var(--color-text-muted)' }}>{t.medidas || '—'}</td>
+                                                            <td>{t.precio_extra > 0 ? `+$${t.precio_extra}` : 'Sin extra'}</td>
+                                                            <td>
+                                                                <button type="button" onClick={() => eliminarTalla(i)}
+                                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 16 }}>
+                                                                    <HiTrash />
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+
+                                    {/* Formulario para agregar nueva talla */}
+                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', padding: '14px 16px', background: 'var(--color-surface-2)', borderRadius: 10, border: '1px solid var(--color-border)' }}>
+                                        <div>
+                                            <label style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Nombre de talla</label>
+                                            <input
+                                                className="form-input"
+                                                placeholder="Pequeño / M / Grande..."
+                                                value={nuevaTalla.nombre}
+                                                onChange={e => setNuevaTalla(t => ({ ...t, nombre: e.target.value }))}
+                                                style={{ padding: '7px 11px', fontSize: 13, width: 140 }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Medidas (opcional)</label>
+                                            <input
+                                                className="form-input"
+                                                placeholder="Ej: 10x8cm"
+                                                value={nuevaTalla.medidas}
+                                                onChange={e => setNuevaTalla(t => ({ ...t, medidas: e.target.value }))}
+                                                style={{ padding: '7px 11px', fontSize: 13, width: 130 }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>Precio extra ($)</label>
+                                            <input
+                                                type="number" min="0" step="0.01"
+                                                className="form-input"
+                                                value={nuevaTalla.precio_extra}
+                                                onChange={e => setNuevaTalla(t => ({ ...t, precio_extra: e.target.value }))}
+                                                style={{ padding: '7px 11px', fontSize: 13, width: 100 }}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={agregarTalla}
+                                            className="btn btn-primary"
+                                            disabled={!nuevaTalla.nombre.trim()}
+                                            style={{ fontSize: 13, padding: '8px 16px' }}
+                                        >
+                                            + Agregar talla
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -458,12 +553,12 @@ export default function AdminProducts() {
                 ) : (
                     <table className="admin-table">
                         <thead><tr>
-                            <th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Colores</th><th>Estado</th><th>Acciones</th>
+                            <th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Colores</th><th>Tallas</th><th>Estado</th><th>Acciones</th>
                         </tr></thead>
                         <tbody>
                             {filtrados.map(p => {
-                                const numColores = p.colores_disponibles === null ? FILAMENT_COLORS.length
-                                    : Array.isArray(p.colores_disponibles) ? p.colores_disponibles.length : FILAMENT_COLORS.length
+                                const numColores = p.colores_disponibles === null ? filamentColors.length
+                                    : Array.isArray(p.colores_disponibles) ? p.colores_disponibles.length : filamentColors.length
                                 const sinStock = Array.isArray(p.colores_disponibles) && p.colores_disponibles.length === 0
                                 return (
                                     <tr key={p.id}>
@@ -480,8 +575,14 @@ export default function AdminProducts() {
                                             {sinStock
                                                 ? <span className="badge badge-cancelado">🚫 Sin stock</span>
                                                 : <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                                                    {numColores === FILAMENT_COLORS.length ? 'Todos' : `${numColores} colores`}
+                                                    {numColores === filamentColors.length ? 'Todos' : `${numColores} colores`}
                                                 </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            {p.tiene_tallas && Array.isArray(p.tallas) && p.tallas.length > 0
+                                                ? <span className="badge badge-produccion">{p.tallas.length} tallas</span>
+                                                : <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>—</span>
                                             }
                                         </td>
                                         <td><span className={`badge ${p.activo ? 'badge-entregado' : 'badge-cancelado'}`}>{p.activo ? 'Activo' : 'Inactivo'}</span></td>

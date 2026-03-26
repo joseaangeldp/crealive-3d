@@ -3,7 +3,7 @@
 // Permite crear y eliminar categorías almacenadas en Supabase
 // ============================================================
 import { useEffect, useState } from 'react'
-import { HiPlus, HiTrash, HiTag } from 'react-icons/hi'
+import { HiPlus, HiTrash, HiTag, HiPencil, HiCheck, HiX } from 'react-icons/hi'
 import { supabase } from '../../lib/supabase'
 
 export default function AdminCategories() {
@@ -14,6 +14,10 @@ export default function AdminCategories() {
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [deletingId, setDeletingId] = useState(null)
+    // Estado de edición inline
+    const [editingId, setEditingId] = useState(null)
+    const [editNombre, setEditNombre] = useState('')
+    const [savingEdit, setSavingEdit] = useState(false)
     const [productosPorCategoria, setProductosPorCategoria] = useState({})
 
     // ── Cargar categorías y conteo de productos ──
@@ -82,6 +86,31 @@ export default function AdminCategories() {
             fetchCategorias()
         }
         setDeletingId(null)
+    }
+
+    // ── Iniciar edición inline ──
+    const startEdit = (cat) => {
+        setEditingId(cat.id)
+        setEditNombre(cat.nombre)
+        setError('')
+        setSuccess('')
+    }
+
+    // ── Guardar edición ──
+    const saveEdit = async (cat) => {
+        const nuevoNombre = editNombre.trim()
+        if (!nuevoNombre || nuevoNombre === cat.nombre) { setEditingId(null); return }
+        setSavingEdit(true)
+        setError('')
+        // 1. Actualizar en tabla categorias
+        const { error: errCat } = await supabase.from('categorias').update({ nombre: nuevoNombre }).eq('id', cat.id)
+        if (errCat) { setError(errCat.message); setSavingEdit(false); return }
+        // 2. Actualizar todos los productos que tenían el nombre viejo
+        await supabase.from('productos').update({ categoria: nuevoNombre }).eq('categoria', cat.nombre)
+        setSuccess(`Categoría renombrada a "${nuevoNombre}" correctamente.`)
+        setEditingId(null)
+        setSavingEdit(false)
+        fetchCategorias()
     }
 
     return (
@@ -155,10 +184,24 @@ export default function AdminCategories() {
                             {categorias.map(cat => (
                                 <tr key={cat.id}>
                                     <td style={{ fontWeight: 600 }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                                            <HiTag style={{ color: 'var(--color-wine)', flexShrink: 0 }} />
-                                            {cat.nombre}
-                                        </span>
+                                        {editingId === cat.id ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <HiTag style={{ color: 'var(--color-wine)', flexShrink: 0 }} />
+                                                <input
+                                                    className="form-input"
+                                                    value={editNombre}
+                                                    onChange={e => setEditNombre(e.target.value)}
+                                                    onKeyDown={e => { if (e.key === 'Enter') saveEdit(cat); if (e.key === 'Escape') setEditingId(null) }}
+                                                    autoFocus
+                                                    style={{ padding: '5px 10px', fontSize: 13, maxWidth: 220 }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                                <HiTag style={{ color: 'var(--color-wine)', flexShrink: 0 }} />
+                                                {cat.nombre}
+                                            </span>
+                                        )}
                                     </td>
                                     <td style={{ textAlign: 'center' }}>
                                         <span className={`badge ${(productosPorCategoria[cat.nombre] || 0) > 0 ? 'badge-entregado' : 'badge-cancelado'}`}>
@@ -166,15 +209,37 @@ export default function AdminCategories() {
                                         </span>
                                     </td>
                                     <td>
-                                        <button
-                                            className="btn btn-ghost"
-                                            style={{ padding: '5px 12px', fontSize: 12, color: '#EF4444', display: 'flex', alignItems: 'center', gap: 5 }}
-                                            onClick={() => handleDelete(cat.id, cat.nombre)}
-                                            disabled={deletingId === cat.id}
-                                        >
-                                            <HiTrash />
-                                            {deletingId === cat.id ? 'Eliminando...' : 'Eliminar'}
-                                        </button>
+                                        <div style={{ display: 'flex', gap: 6 }}>
+                                            {editingId === cat.id ? (
+                                                <>
+                                                    <button className="btn btn-primary" style={{ padding: '5px 10px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                                                        onClick={() => saveEdit(cat)} disabled={savingEdit}>
+                                                        <HiCheck /> {savingEdit ? 'Guardando...' : 'Guardar'}
+                                                    </button>
+                                                    <button className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 12 }}
+                                                        onClick={() => setEditingId(null)}>
+                                                        <HiX />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button className="btn btn-ghost"
+                                                        style={{ padding: '5px 10px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                                                        onClick={() => startEdit(cat)}>
+                                                        <HiPencil /> Editar
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-ghost"
+                                                        style={{ padding: '5px 10px', fontSize: 12, color: '#EF4444', display: 'flex', alignItems: 'center', gap: 4 }}
+                                                        onClick={() => handleDelete(cat.id, cat.nombre)}
+                                                        disabled={deletingId === cat.id}
+                                                    >
+                                                        <HiTrash />
+                                                        {deletingId === cat.id ? 'Eliminando...' : 'Eliminar'}
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

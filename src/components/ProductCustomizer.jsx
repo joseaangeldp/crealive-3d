@@ -53,6 +53,11 @@ export default function ProductCustomizer({ producto, onClose }) {
     const [imgIndex, setImgIndex] = useState(0)
     const [lightbox, setLightbox] = useState(false)
     const [colorElegido, setColorElegido] = useState(coloresDisponibles[0] || null)
+    const [tallaElegida, setTallaElegida] = useState(
+        (producto.tiene_tallas && Array.isArray(producto.tallas) && producto.tallas.length > 0)
+            ? producto.tallas[0]
+            : null
+    )
     const [mensaje, setMensaje] = useState('')
     const [cantidad, setCantidad] = useState(1)
     const [enviando, setEnviando] = useState(false)
@@ -114,9 +119,11 @@ export default function ProductCustomizer({ producto, onClose }) {
                 ``,
                 `📦 *Producto:* ${producto.nombre}`,
                 `🎨 *Color:* ${colorElegido.name}`,
+                tallaElegida ? `👕 *Talla:* ${tallaElegida.nombre}${tallaElegida.medidas ? ` (${tallaElegida.medidas})` : ''}` : null,
                 `🔢 *Cantidad:* ${cantidad}`,
                 mensaje.trim() ? `📝 *Mensaje:* ${mensaje.trim()}` : null,
             ].filter(Boolean).join('\n')
+
 
             const waUrl = `https://wa.me/${WHATSAPP_NEGOCIO}?text=${encodeURIComponent(msgLines)}`
 
@@ -238,6 +245,38 @@ export default function ProductCustomizer({ producto, onClose }) {
                         </>
                     )}
                 </div>
+
+                {/* Selector de talla */}
+                {producto.tiene_tallas && Array.isArray(producto.tallas) && producto.tallas.length > 0 && (
+                    <div className="customizer-section">
+                        <label className="form-label">Talla</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                            {producto.tallas.map((t, i) => {
+                                const seleccionada = tallaElegida?.nombre === t.nombre
+                                return (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => setTallaElegida(t)}
+                                        style={{
+                                            padding: '8px 16px', fontSize: 13, fontWeight: 600,
+                                            border: seleccionada ? '2px solid var(--color-wine)' : '2px solid var(--color-border)',
+                                            borderRadius: 10,
+                                            background: seleccionada ? 'rgba(196,118,138,0.1)' : 'transparent',
+                                            cursor: 'pointer', fontFamily: 'var(--font-body)',
+                                            color: seleccionada ? 'var(--color-wine)' : 'var(--color-text)',
+                                            transition: 'all 0.15s',
+                                        }}
+                                    >
+                                        {t.nombre}
+                                        {t.medidas && <span style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block' }}>{t.medidas}</span>}
+                                        {t.precio_extra > 0 && <span style={{ fontSize: 11, color: 'var(--color-wine)', display: 'block' }}>+${t.precio_extra}</span>}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Instrucciones */}
                 <div className="customizer-section form-group">

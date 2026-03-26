@@ -96,6 +96,7 @@ export default function Catalog() {
     const [selected, setSelected] = useState(null)
     const [customOpen, setCustomOpen] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [edicionesActivas, setEdicionesActivas] = useState({}) // { producto_id: edicion }
 
     useEffect(() => {
         const load = async () => {
@@ -115,6 +116,23 @@ export default function Catalog() {
                 if (!catsError && cats && cats.length > 0) {
                     setCategorias(['Todos', ...cats.map(c => c.nombre)])
                 }
+
+                // Cargar ediciones limitadas activas
+                try {
+                    const hoy = new Date().toISOString().split('T')[0]
+                    const { data: eds } = await supabase
+                        .from('ediciones_limitadas')
+                        .select('*')
+                        .eq('activo', true)
+                        .eq('tipo', 'producto')
+                        .lte('fecha_inicio', hoy)
+                        .gte('fecha_fin', hoy)
+                    if (eds && eds.length > 0) {
+                        const map = {}
+                        eds.forEach(ed => { if (ed.producto_id) map[ed.producto_id] = ed })
+                        setEdicionesActivas(map)
+                    }
+                } catch (_) {}
             } catch (_) {
                 // Supabase no configurado — se usan los datos de demo/config
             } finally {
@@ -166,6 +184,7 @@ export default function Catalog() {
                                 key={producto.id}
                                 producto={producto}
                                 onPersonalizar={() => setSelected(producto)}
+                                edicionActiva={!!edicionesActivas[producto.id]}
                             />
                         ))}
                     </div>
