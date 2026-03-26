@@ -20,6 +20,7 @@ const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'))
 const Gallery = lazy(() => import('./pages/Gallery'))
 const OrderStatus = lazy(() => import('./pages/OrderStatus'))
 const ProductDetail = lazy(() => import('./pages/ProductDetail'))
+const CollectionDetail = lazy(() => import('./pages/CollectionDetail'))
 
 // Panel Admin
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
@@ -54,6 +55,7 @@ export default function App() {
                     <Route path="/galeria" element={<Gallery />} />
                     <Route path="/pedido/:id" element={<OrderStatus />} />
                     <Route path="/producto/:id" element={<ProductDetail />} />
+                    <Route path="/coleccion/:id" element={<CollectionDetail />} />
 
                     {/* Rutas protegidas (cliente) */}
                     <Route path="/perfil" element={

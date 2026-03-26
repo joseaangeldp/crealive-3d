@@ -64,21 +64,11 @@ export default function Home() {
     useEffect(() => {
         const loadMasVendidos = async () => {
             try {
-                // Intentar ordenar por ventas si existe la columna
-                let { data, error } = await supabase
+                const { data, error } = await supabase
                     .from('productos')
                     .select('*')
                     .eq('activo', true)
-                    .order('ventas', { ascending: false })
                     .limit(4)
-                if (error || !data || data.length === 0) {
-                    // Fallback: tomar los primeros 4 activos
-                    ; ({ data, error } = await supabase
-                        .from('productos')
-                        .select('*')
-                        .eq('activo', true)
-                        .limit(4))
-                }
                 if (!error && data && data.length > 0) setMasVendidos(data)
             } catch (_) {
                 // usa el demo
@@ -109,7 +99,7 @@ export default function Home() {
                                     <span className="carousel-label">Novedades</span>
                                     <h2 className="carousel-title">{col.titulo}</h2>
                                     <p className="carousel-desc">{col.descripcion}</p>
-                                    <Link to="/catalogo" className="btn btn-ghost">Ver catálogo →</Link>
+                                    <Link to={`/coleccion/${col.id}`} className="btn btn-ghost">Ver colección →</Link>
                                 </div>
                             </div>
                         </div>
