@@ -125,7 +125,7 @@ export default function AdminDashboard() {
             <h1 className="admin-page-title">Dashboard</h1>
 
             {/* KPIs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+            <div className="dash-kpis-grid">
                 <KPICard icon={HiOutlineClipboardList} label="Pedidos hoy" value={stats.pedidosHoy} accent="#C4768A" />
                 <KPICard icon={HiOutlineCalendar} label="Pedidos esta semana" value={stats.pedidosSemana} accent="#8B5CF6" />
                 <KPICard icon={HiOutlineTrendingUp} label="Pedidos en total" value={stats.totalPedidos} accent="#0891B2" />
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
                 <KPICard icon={HiOutlineCurrencyDollar} label="Ingreso estimado" value={`$${stats.ingresoTotal.toFixed(0)}`} sub="Basado en precios de productos" accent="#D97706" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 28 }}>
+            <div className="dash-charts-grid">
                 {/* Top Productos */}
                 <div className="card" style={{ padding: 24 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>

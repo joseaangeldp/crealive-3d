@@ -1,5 +1,5 @@
 // ============================================================
-// src/components/TopNav.jsx — Barra superior con icono de carrito
+// src/components/TopNav.jsx — Barra superior con logo de marca
 // ============================================================
 import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
@@ -8,6 +8,16 @@ import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
 import CartDrawer from './CartDrawer'
 import './TopNav.css'
+
+function CrealiveIsotipo({ size = 28, color = 'currentColor' }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="4" y="4" width="22" height="8" rx="2" fill={color} />
+            <rect x="4" y="24" width="22" height="8" rx="2" fill={color} />
+            <rect x="4" y="4" width="8" height="28" rx="2" fill={color} />
+        </svg>
+    )
+}
 
 export default function TopNav() {
     const { user, profile, logout } = useAuth()
@@ -19,7 +29,10 @@ export default function TopNav() {
             <nav className="topnav">
                 <div className="topnav__inner">
                     <Link to="/" className="topnav__logo">
-                        Crealive <span>3D</span>
+                        <CrealiveIsotipo size={28} color="var(--color-wine)" />
+                        <span className="topnav__logo-word">
+                            crealive<em>3D</em>
+                        </span>
                     </Link>
 
                     <ul className="topnav__links">
@@ -30,13 +43,12 @@ export default function TopNav() {
                     </ul>
 
                     <div className="topnav__actions">
-                        {/* Icono carrito */}
                         <button
                             className="topnav__cart-btn"
                             onClick={() => setCartOpen(true)}
                             aria-label="Abrir carrito"
                         >
-                            <HiOutlineShoppingCart size={22} />
+                            <HiOutlineShoppingCart size={21} />
                             {itemCount > 0 && (
                                 <span className="cart-badge">{itemCount}</span>
                             )}
@@ -56,10 +68,10 @@ export default function TopNav() {
                             </>
                         ) : (
                             <>
-                                <Link to="/login" className="btn btn-ghost" style={{ padding: '8px 20px', fontSize: '13px' }}>
+                                <Link to="/login" className="topnav__login-link">
                                     Iniciar sesión
                                 </Link>
-                                <Link to="/registro" className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '13px' }}>
+                                <Link to="/registro" className="btn btn-primary" style={{ padding: '9px 22px', fontSize: '13px', fontWeight: 700 }}>
                                     Registrarse
                                 </Link>
                             </>

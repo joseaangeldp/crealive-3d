@@ -2,25 +2,35 @@
    src/index.css — Design System Global — Crealive 3D
    ============================================================ */
 
-/* --- Google Fonts (también incluidas en index.html) --- */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-/* --- Variables de diseño --- */
+/* --- Variables de diseño — Paleta Crealive --- */
 :root {
-  --color-bg:       #FAFAF8;
-  --color-blue:     #A8C8E8;
-  --color-pink:     #F5C6D8;
-  --color-wine:     #C4768A;
-  --color-wine-dark:#b05e74;
-  --color-text:     #2E2E2E;
-  --color-text-muted: #7a7a7a;
-  --color-border:   #EDEDEA;
+  /* Fondos */
+  --color-bg:       #F9F5EE;   /* crema cálido del packaging */
   --color-white:    #FFFFFF;
   --color-surface:  #FFFFFF;
-  --color-surface-2:#F5F5F2;
+  --color-surface-2:#F3EDE2;   /* crema más oscuro */
+
+  /* Marca principal */
+  --color-brown:    #2C1A0E;   /* marrón chocolate (base del packaging) */
+  --color-wine:     #C84B7A;   /* fucsia/rosa — acento principal */
+  --color-wine-dark:#A83860;
+
+  /* Acentos secundarios */
+  --color-orange:   #E8602C;   /* naranja del packaging */
+  --color-lime:     #C8D400;   /* lima-amarillo del packaging */
+  --color-blue:     #8AC4DC;   /* azul claro del packaging */
+  --color-pink:     #F5C6D8;   /* rosa pálido para fondos suaves */
+
+  /* Texto */
+  --color-text:       #2C1A0E; /* marrón chocolate */
+  --color-text-muted: #8C7B6E; /* marrón claro */
+  --color-border:     #E5DDD0; /* borde cálido */
 
   --font-body:    'DM Sans', sans-serif;
-  --font-display: 'Playfair Display', serif;
+  --font-display: 'Space Grotesk', sans-serif;
 
   --radius-sm:  8px;
   --radius-md:  14px;
@@ -97,12 +107,12 @@ input, textarea, select { font-family: var(--font-body); }
 .btn-primary {
   background: var(--color-wine);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(196,118,138,0.35);
+  box-shadow: 0 4px 14px rgba(200,75,122,0.35);
 }
 .btn-primary:hover {
   background: var(--color-wine-dark);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(196,118,138,0.45);
+  box-shadow: 0 6px 18px rgba(200,75,122,0.45);
 }
 .btn-primary:active { transform: translateY(0); }
 

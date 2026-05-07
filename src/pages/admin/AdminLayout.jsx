@@ -80,8 +80,15 @@ export default function AdminLayout() {
             {/* Sidebar */}
             <aside className={`admin-sidebar${sidebarOpen ? ' open' : ''}`}>
                 <div className="admin-sidebar__logo">
-                    Crealive 3D
-                    <span>Panel de administración</span>
+                    <svg width="26" height="26" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                        <rect x="4" y="4" width="22" height="8" rx="2" fill="var(--color-wine)" />
+                        <rect x="4" y="24" width="22" height="8" rx="2" fill="var(--color-wine)" />
+                        <rect x="4" y="4" width="8" height="28" rx="2" fill="var(--color-wine)" />
+                    </svg>
+                    <div>
+                        <div className="admin-sidebar__logo-text">crealive</div>
+                        <span className="admin-sidebar__logo-sub">Admin Panel</span>
+                    </div>
                 </div>
 
                 <nav className="admin-nav">
