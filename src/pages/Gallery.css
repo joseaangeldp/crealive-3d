@@ -30,14 +30,18 @@
 }
 
 .gallery-header h1 {
-    color: var(--color-text);
-    font-size: 36px;
-    margin-bottom: 8px;
+    color: #fff;
+    font-size: clamp(28px, 5vw, 38px);
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
 }
 
 .gallery-header p {
-    color: var(--color-text-muted);
+    color: rgba(255, 255, 255, 0.65);
     font-size: 15px;
+    position: relative;
+    z-index: 1;
 }
 
 .gallery-grid {
