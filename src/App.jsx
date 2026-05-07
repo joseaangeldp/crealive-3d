@@ -8,6 +8,7 @@ import { lazy, Suspense } from 'react'
 import TopNav from './components/TopNav'
 import BottomNav from './components/BottomNav'
 import Footer from './components/Footer'
+import WhatsAppFAB from './components/WhatsAppFAB'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Páginas cliente (carga diferida para rendimiento)
@@ -80,6 +81,7 @@ export default function App() {
 
             <Footer />
             <BottomNav />
+            <WhatsAppFAB />
         </>
     )
 }

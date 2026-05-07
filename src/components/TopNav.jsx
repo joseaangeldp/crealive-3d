@@ -11,10 +11,11 @@ import './TopNav.css'
 
 function CrealiveIsotipo({ size = 28, color = 'currentColor' }) {
     return (
-        <svg width={size} height={size} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="4" y="4" width="22" height="8" rx="2" fill={color} />
-            <rect x="4" y="24" width="22" height="8" rx="2" fill={color} />
-            <rect x="4" y="4" width="8" height="28" rx="2" fill={color} />
+        <svg width={size} height={size} viewBox="0 0 60 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            {/* C exterior: top arm + left column + bottom arm con curva */}
+            <path d="M6 0 H52 V22 H20 V42 H52 V64 H6 Q0 64 0 58 V6 Q0 0 6 0 Z" fill={color} />
+            {/* Notch interior (diente superior derecho del C) */}
+            <rect x="34" y="22" width="18" height="20" rx="2" fill={color} />
         </svg>
     )
 }

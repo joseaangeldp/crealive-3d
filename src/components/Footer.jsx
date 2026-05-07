@@ -170,15 +170,6 @@ export default function Footer() {
                         </li>
                     </ul>
 
-                    {/* Mini-CTA WhatsApp */}
-                    <a href={waUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="footer-wa-btn"
-                    >
-                        <IconWhatsApp />
-                        Hacer un pedido
-                    </a>
                 </div>
 
             </div>

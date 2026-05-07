@@ -2,9 +2,31 @@
    src/pages/Gallery.css
    ============================================================ */
 .gallery-header {
-    background: linear-gradient(135deg, var(--color-pink) 0%, var(--color-blue) 100%);
-    padding: 48px 0 36px;
+    background: var(--color-brown);
+    padding: 52px 0 40px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.gallery-header::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 200px; height: 200px;
+    background: var(--color-wine);
+    border-radius: 50%;
+    opacity: 0.12;
+}
+
+.gallery-header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: 10%;
+    width: 120px; height: 120px;
+    background: var(--color-lime);
+    border-radius: 50%;
+    opacity: 0.10;
 }
 
 .gallery-header h1 {
@@ -120,4 +142,66 @@
     .gallery-img {
         height: 150px;
     }
+}
+/* ─── CTA final galería ─── */
+.gallery-cta {
+    padding: 0 20px 56px;
+}
+
+.gallery-cta__inner {
+    background: var(--color-brown);
+    border-radius: 24px;
+    padding: 48px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.gallery-cta__inner::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: var(--color-wine);
+    border-radius: 50%;
+    opacity: 0.15;
+}
+
+.gallery-cta__inner::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    background: var(--color-orange);
+    border-radius: 50%;
+    opacity: 0.12;
+}
+
+.gallery-cta__inner h2 {
+    color: #fff;
+    font-size: clamp(22px, 4vw, 30px);
+    margin-bottom: 8px;
+    position: relative; z-index: 1;
+}
+
+.gallery-cta__inner p {
+    color: rgba(255,255,255,0.65);
+    font-size: 15px;
+    position: relative; z-index: 1;
+}
+
+.gallery-cta__btn {
+    background: var(--color-wine);
+    box-shadow: 0 4px 18px rgba(200,75,122,0.4);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-weight: 700;
+    padding: 13px 30px;
+    position: relative; z-index: 1;
 }

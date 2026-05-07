@@ -2,6 +2,7 @@
 // src/pages/Gallery.jsx — Galería de trabajos terminados
 // ============================================================
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { CATEGORIAS } from '../config'
 import './Gallery.css'
@@ -83,6 +84,19 @@ export default function Gallery() {
                         <h3>No hay trabajos en esta categoría aún</h3>
                     </div>
                 )}
+            </div>
+
+            {/* CTA oscuro — al final de la galería */}
+            <div className="gallery-cta">
+                <div className="gallery-cta__inner">
+                    <div>
+                        <h2>¿Te gustó lo que ves?</h2>
+                        <p>Pedí tu pieza personalizada — la fabricamos para vos</p>
+                    </div>
+                    <Link to="/catalogo" className="btn btn-primary gallery-cta__btn">
+                        Ver catálogo →
+                    </Link>
+                </div>
             </div>
 
             {/* Lightbox */}

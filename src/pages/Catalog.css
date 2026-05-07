@@ -66,36 +66,80 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    background: linear-gradient(135deg, var(--color-blue) 0%, var(--color-pink) 100%);
-    border-radius: var(--radius-xl);
-    padding: 28px 32px;
-    margin-top: 48px;
+    gap: 24px;
+    background: var(--color-brown);
+    border-radius: 24px;
+    padding: 36px 40px;
+    margin-top: 56px;
     flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Círculos decorativos del packaging */
+.custom-order-banner::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: var(--color-wine);
+    border-radius: 50%;
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+.custom-order-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 160px;
+    width: 100px;
+    height: 100px;
+    background: var(--color-orange);
+    border-radius: 50%;
+    opacity: 0.12;
+    pointer-events: none;
 }
 
 .custom-order-banner__text {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
+    position: relative;
+    z-index: 1;
 }
 
 .custom-order-banner__icon {
-    font-size: 36px;
+    font-size: 38px;
     flex-shrink: 0;
 }
 
 .custom-order-banner__text strong {
     display: block;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
+    color: #fff;
+    font-family: var(--font-display);
 }
 
 .custom-order-banner__text p {
     font-size: 14px;
-    color: var(--color-text-muted);
+    color: rgba(255,255,255,0.65);
     margin: 0;
+}
+
+.custom-order-banner .btn-primary {
+    position: relative;
+    z-index: 1;
+    background: var(--color-wine);
+    box-shadow: 0 4px 18px rgba(200,75,122,0.4);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-weight: 700;
+    padding: 12px 28px;
 }
 
 /* ─── Modal pedido a medida ─── */

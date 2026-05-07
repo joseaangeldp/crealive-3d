@@ -80,10 +80,9 @@ export default function AdminLayout() {
             {/* Sidebar */}
             <aside className={`admin-sidebar${sidebarOpen ? ' open' : ''}`}>
                 <div className="admin-sidebar__logo">
-                    <svg width="26" height="26" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-                        <rect x="4" y="4" width="22" height="8" rx="2" fill="var(--color-wine)" />
-                        <rect x="4" y="24" width="22" height="8" rx="2" fill="var(--color-wine)" />
-                        <rect x="4" y="4" width="8" height="28" rx="2" fill="var(--color-wine)" />
+                    <svg width="26" height="26" viewBox="0 0 60 64" fill="none" aria-hidden="true">
+                        <path d="M6 0 H52 V22 H20 V42 H52 V64 H6 Q0 64 0 58 V6 Q0 0 6 0 Z" fill="var(--color-wine)" />
+                        <rect x="34" y="22" width="18" height="20" rx="2" fill="var(--color-wine)" />
                     </svg>
                     <div>
                         <div className="admin-sidebar__logo-text">crealive</div>
