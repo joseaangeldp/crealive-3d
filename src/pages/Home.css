@@ -94,6 +94,16 @@
     max-width: 400px;
 }
 
+/* ── Animación de entrada del texto hero ── */
+.hero-fadein {
+    animation: heroFadeUp 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 /* CTA dentro del carousel */
 .carousel-content .btn-ghost {
     background: rgba(255,255,255,0.15);
@@ -216,6 +226,14 @@
 .feature-card {
     padding: 28px 24px;
     text-align: center;
+    border-left: 3px solid transparent;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.feature-card:hover {
+    border-left-color: var(--color-wine);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
 }
 
 .feature-icon {
@@ -273,8 +291,8 @@
 }
 
 .step-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.09);
 }
 
 .step-number {
@@ -395,7 +413,7 @@
     position: relative;
 }
 
-/* Badge N°1 */
+/* Badge N°1 — pulse continuo */
 .badge-top {
     position: absolute;
     top: -10px;
@@ -410,6 +428,12 @@
     border-radius: var(--radius-full);
     box-shadow: 0 2px 8px rgba(247, 107, 28, 0.4);
     pointer-events: none;
+    animation: badgePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1);    box-shadow: 0 2px 8px rgba(247,107,28,0.40); }
+    50%       { transform: scale(1.09); box-shadow: 0 4px 16px rgba(247,107,28,0.55); }
 }
 
 /* Scroll horizontal en mobile */

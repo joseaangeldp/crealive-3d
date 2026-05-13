@@ -15,11 +15,26 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.4s ease;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-card:hover .product-card__img {
-    transform: scale(1.04);
+    transform: scale(1.06);
+}
+
+/* Overlay degradado desde abajo al hacer hover */
+.product-card__img-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(44,26,14,0.45) 0%, transparent 55%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
+.product-card:hover .product-card__img-wrap::after {
+    opacity: 1;
 }
 
 .product-card__cat {
