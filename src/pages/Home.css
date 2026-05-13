@@ -96,11 +96,12 @@
 
 /* ── Animación de entrada del texto hero ── */
 .hero-fadein {
-    animation: heroFadeUp 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: heroFadeUp 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.2s;
 }
 
 @keyframes heroFadeUp {
-    from { opacity: 0; transform: translateY(32px); }
+    from { opacity: 0; transform: translateY(40px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -428,12 +429,12 @@
     border-radius: var(--radius-full);
     box-shadow: 0 2px 8px rgba(247, 107, 28, 0.4);
     pointer-events: none;
-    animation: badgePulse 2.4s ease-in-out infinite;
+    animation: badgePulse 3.8s ease-in-out infinite;
 }
 
 @keyframes badgePulse {
     0%, 100% { transform: scale(1);    box-shadow: 0 2px 8px rgba(247,107,28,0.40); }
-    50%       { transform: scale(1.09); box-shadow: 0 4px 16px rgba(247,107,28,0.55); }
+    50%       { transform: scale(1.06); box-shadow: 0 4px 16px rgba(247,107,28,0.50); }
 }
 
 /* Scroll horizontal en mobile */

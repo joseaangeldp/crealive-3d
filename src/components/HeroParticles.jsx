@@ -6,7 +6,7 @@
 import { useEffect, useRef } from 'react'
 import './HeroParticles.css'
 
-const COUNT = 48
+const COUNT = 36
 
 export default function HeroParticles() {
     const canvasRef = useRef(null)
@@ -27,10 +27,10 @@ export default function HeroParticles() {
         const mkParticle = () => ({
             x:      Math.random() * canvas.width,
             y:      Math.random() * canvas.height,
-            r:      Math.random() * 1.8 + 0.6,
-            vx:     (Math.random() - 0.5) * 0.28,
-            vy:     (Math.random() - 0.5) * 0.28,
-            alpha:  Math.random() * 0.14 + 0.04,
+            r:      Math.random() * 1.6 + 0.5,
+            vx:     (Math.random() - 0.5) * 0.12,
+            vy:     (Math.random() - 0.5) * 0.10,
+            alpha:  Math.random() * 0.12 + 0.03,
         })
 
         let pts = []
