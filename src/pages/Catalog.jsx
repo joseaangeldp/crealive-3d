@@ -96,6 +96,7 @@ export default function Catalog() {
     const [selected, setSelected] = useState(null)
     const [customOpen, setCustomOpen] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [isOffline, setIsOffline] = useState(false)
     const [edicionesActivas, setEdicionesActivas] = useState({}) // { producto_id: edicion }
 
     useEffect(() => {
@@ -134,7 +135,8 @@ export default function Catalog() {
                     }
                 } catch (_) {}
             } catch (_) {
-                // Supabase no configurado — se usan los datos de demo/config
+                // Supabase no disponible — modo offline
+                setIsOffline(true)
             } finally {
                 setLoading(false)
             }
@@ -154,6 +156,13 @@ export default function Catalog() {
                     <p>Elegí tu pieza y personalizála a tu gusto</p>
                 </div>
             </div>
+
+            {/* Banner offline */}
+            {isOffline && (
+                <div className="catalog-offline-banner">
+                    ⚠️ Sin conexión con el servidor — algunos productos no están disponibles
+                </div>
+            )}
 
             <div className="container section">
                 {/* Filtros de categoría */}
@@ -185,6 +194,7 @@ export default function Catalog() {
                                 producto={producto}
                                 onPersonalizar={() => setSelected(producto)}
                                 edicionActiva={!!edicionesActivas[producto.id]}
+                                offline={isOffline}
                             />
                         ))}
                     </div>

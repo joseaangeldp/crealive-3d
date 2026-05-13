@@ -43,6 +43,7 @@ export default function Home() {
     const [activeSlide, setActiveSlide] = useState(0)
     const [masVendidos, setMasVendidos] = useState(DEMO_MAS_VENDIDOS)
     const [selectedProduct, setSelectedProduct] = useState(null)
+    const [isOffline, setIsOffline] = useState(false)
 
     useEffect(() => {
         const load = async () => {
@@ -70,8 +71,9 @@ export default function Home() {
                     .eq('activo', true)
                     .limit(4)
                 if (!error && data && data.length > 0) setMasVendidos(data)
+                else if (error) setIsOffline(true)
             } catch (_) {
-                // usa el demo
+                setIsOffline(true)
             }
         }
         loadMasVendidos()
@@ -208,6 +210,7 @@ export default function Home() {
                                 <ProductCard
                                     producto={producto}
                                     onPersonalizar={() => setSelectedProduct(producto)}
+                                    offline={isOffline}
                                 />
                             </div>
                         ))}
