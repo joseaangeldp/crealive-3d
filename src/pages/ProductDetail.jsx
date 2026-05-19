@@ -7,6 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { HiChevronLeft, HiChevronRight, HiArrowLeft } from 'react-icons/hi'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../contexts/CartContext'
 import { WHATSAPP_NEGOCIO } from '../config'
 import './ProductDetail.css'
 
@@ -14,6 +15,7 @@ export default function ProductDetail() {
     const { id } = useParams()
     const navigate = useNavigate()
     const { user, profile } = useAuth()
+    const { addItem } = useCart()
 
     const [producto, setProducto] = useState(null)
     const [colores, setColores] = useState([])
@@ -97,8 +99,28 @@ export default function ProductDetail() {
 
     const sinColores = colores.length === 0
 
+    const handleAddToCart = () => {
+        addItem({
+            producto,
+            color: colorElegido || null,
+            talla: tallaElegida || null,
+            cantidad,
+            mensaje,
+        })
+        // Feedback visual rápido
+        const btn = document.getElementById('btn-add-cart')
+        if (btn) {
+            btn.textContent = '✓ Agregado'
+            btn.disabled = true
+            setTimeout(() => {
+                btn.textContent = '🛒 Añadir al carrito'
+                btn.disabled = false
+            }, 1500)
+        }
+    }
+
     const handlePedir = async () => {
-        if (sinColores || enviando) return
+        if (enviando) return
         setEnviando(true)
 
         const clienteNombre = profile?.nombre || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Cliente'
@@ -115,7 +137,7 @@ export default function ProductDetail() {
             const pedidoData = {
                 producto_id: producto.id,
                 producto_nombre: producto.nombre,
-                color_elegido: `${colorElegido.name} (${colorElegido.hex})`,
+                color_elegido: colorElegido ? `${colorElegido.name} (${colorElegido.hex})` : '—',
                 mensaje: mensaje.trim(),
                 cantidad,
                 estado: 'pendiente',
@@ -133,7 +155,7 @@ export default function ProductDetail() {
             ``,
             `📦 *Producto:* ${producto.nombre}`,
             edicion ? `✨ *Edición:* ${edicion.nombre}` : null,
-            `🎨 *Color:* ${colorElegido.name}`,
+            colorElegido ? `🎨 *Color:* ${colorElegido.name}` : null,
             tallaElegida ? `👕 *Talla:* ${tallaElegida.nombre}${tallaElegida.medidas ? ` (${tallaElegida.medidas})` : ''}` : null,
             `🔢 *Cantidad:* ${cantidad}`,
             mensaje.trim() ? `📝 *Mensaje:* ${mensaje.trim()}` : null,
@@ -315,12 +337,7 @@ export default function ProductDetail() {
                         <label className="detail-label">Cantidad</label>
                         <div className="qty-row">
                             <button className="qty-btn" onClick={() => setCantidad(q => Math.max(1, q - 1))}>−</button>
-                            <input
-                                type="number" min={1} max={99}
-                                value={cantidad}
-                                onChange={e => setCantidad(Math.max(1, parseInt(e.target.value) || 1))}
-                                className="qty-input"
-                            />
+                            <span className="qty-input">{cantidad}</span>
                             <button className="qty-btn" onClick={() => setCantidad(q => Math.min(99, q + 1))}>+</button>
                         </div>
                     </div>
@@ -335,25 +352,32 @@ export default function ProductDetail() {
                             value={mensaje}
                             onChange={e => setMensaje(e.target.value)}
                             style={{ resize: 'vertical', fontSize: 14 }}
-                            disabled={sinColores}
                         />
                     </div>
 
                     {/* Total */}
-                    {!sinColores && (
-                        <div className="detail-total">
-                            <span>Total estimado</span>
-                            <strong>${precioTotal}</strong>
-                        </div>
-                    )}
+                    <div className="detail-total">
+                        <span>Total estimado</span>
+                        <strong>${precioTotal}</strong>
+                    </div>
 
-                    <button
-                        className="btn btn-primary btn-pedir"
-                        onClick={handlePedir}
-                        disabled={sinColores || enviando}
-                    >
-                        {enviando ? 'Redirigiendo...' : '📲 Pedir por WhatsApp'}
-                    </button>
+                    {/* Botones de acción */}
+                    <div className="detail-actions">
+                        <button
+                            id="btn-add-cart"
+                            className="btn btn-outline btn-pedir"
+                            onClick={handleAddToCart}
+                        >
+                            🛒 Añadir al carrito
+                        </button>
+                        <button
+                            className="btn btn-primary btn-pedir"
+                            onClick={handlePedir}
+                            disabled={enviando}
+                        >
+                            {enviando ? 'Redirigiendo...' : '📲 Pedir por WhatsApp'}
+                        </button>
+                    </div>
 
                     {!user && (
                         <p className="login-hint">

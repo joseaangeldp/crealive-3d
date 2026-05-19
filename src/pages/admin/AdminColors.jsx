@@ -62,8 +62,17 @@ export default function AdminColors() {
 
     const saveEdit = async (color) => {
         if (!editForm.name.trim()) return
-        await supabase.from('filament_colors').update({ name: editForm.name.trim(), hex: editForm.hex }).eq('id', color.id)
-        setColors(prev => prev.map(c => c.id === color.id ? { ...c, name: editForm.name.trim(), hex: editForm.hex } : c))
+        const { error: err } = await supabase
+            .from('filament_colors')
+            .update({ name: editForm.name.trim(), hex: editForm.hex })
+            .eq('id', color.id)
+        if (err) {
+            setError(`Error al guardar: ${err.message}`)
+            return
+        }
+        setColors(prev => prev.map(c =>
+            c.id === color.id ? { ...c, name: editForm.name.trim(), hex: editForm.hex } : c
+        ))
         setEditingId(null)
         setSuccess('Color actualizado.')
     }
@@ -127,7 +136,8 @@ export default function AdminColors() {
                                     <td>
                                         <span style={{
                                             display: 'block', width: 32, height: 32, borderRadius: '50%',
-                                            background: color.hex, border: '2px solid rgba(0,0,0,0.08)',
+                                            background: editingId === color.id ? editForm.hex : color.hex,
+                                            border: '2px solid rgba(0,0,0,0.08)',
                                         }} />
                                     </td>
                                     <td style={{ fontWeight: 600 }}>
