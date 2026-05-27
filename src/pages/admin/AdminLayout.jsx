@@ -19,6 +19,7 @@ import {
     HiOutlineHome,
     HiOutlineColorSwatch,
     HiOutlineSparkles,
+    HiOutlineCollection,
 } from 'react-icons/hi'
 import './Admin.css'
 
@@ -28,6 +29,7 @@ const NAV_LINKS = [
     { to: '/admin/clientes', label: 'Clientes', Icon: HiOutlineUsers },
     { to: '/admin/productos', label: 'Productos', Icon: HiOutlineCube },
     { to: '/admin/colecciones', label: 'Colecciones', Icon: HiOutlinePhotograph },
+    { to: '/admin/galeria', label: 'Galería', Icon: HiOutlineCollection },
     { to: '/admin/categorias', label: 'Categorías', Icon: HiOutlineTag },
     { to: '/admin/colores', label: 'Colores', Icon: HiOutlineColorSwatch },
     { to: '/admin/ediciones', label: 'Ed. Limitadas', Icon: HiOutlineSparkles },

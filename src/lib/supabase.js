@@ -76,6 +76,24 @@
 // create policy "Admin ve todos los pedidos" on public.pedidos
 //   for all using (auth.email() = current_setting('app.admin_email', true));
 //
+// -- 5. Tabla de galería de trabajos terminados
+// create table public.galeria (
+//   id uuid primary key default gen_random_uuid(),
+//   titulo text not null,
+//   categoria text,
+//   descripcion text,
+//   imagen_url text not null,
+//   orden int default 0
+// );
+// alter table public.galeria enable row level security;
+// create policy "Todos pueden ver la galería" on public.galeria
+//   for select using (true);
+// create policy "Solo admin puede modificar galería" on public.galeria
+//   for all using (auth.email() = current_setting('app.admin_email', true));
+//
+// -- Storage: crear bucket 'galeria' (público) en Supabase Storage
+// -- Y agregar policy: SELECT para todos, INSERT/DELETE para admin autenticado
+//
 // ============================================================
 
 import { createClient } from '@supabase/supabase-js'

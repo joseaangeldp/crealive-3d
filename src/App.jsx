@@ -35,6 +35,7 @@ const AdminMarketing = lazy(() => import('./pages/admin/AdminMarketing'))
 const AdminCategories = lazy(() => import('./pages/admin/AdminCategories'))
 const AdminColors = lazy(() => import('./pages/admin/AdminColors'))
 const AdminLimitedEditions = lazy(() => import('./pages/admin/AdminLimitedEditions'))
+const AdminGallery = lazy(() => import('./pages/admin/AdminGallery'))
 
 function Loading() {
     return <div className="spinner" style={{ marginTop: '80px' }} />
@@ -74,6 +75,7 @@ export default function App() {
                         <Route path="categorias" element={<AdminCategories />} />
                         <Route path="colores" element={<AdminColors />} />
                         <Route path="ediciones" element={<AdminLimitedEditions />} />
+                        <Route path="galeria" element={<AdminGallery />} />
                         <Route path="marketing" element={<AdminMarketing />} />
                     </Route>
                 </Routes>
