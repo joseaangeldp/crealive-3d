@@ -32,5 +32,12 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Binarios de diseño 3D (¡no versionar!)
+*.3mf
+*.stl
+*.obj
+*.step
+*.shapr
+
 # Vite
 vite.config.js.timestamp-*
