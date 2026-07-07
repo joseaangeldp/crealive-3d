@@ -60,6 +60,9 @@ export default function ProductCard({ producto, onPersonalizar, edicionActiva, o
                         alt={producto.nombre}
                         className="product-card__img"
                         loading="lazy"
+                        decoding="async"
+                        width="800"
+                        height="600"
                     />
                 )}
                 <span className="product-card__cat">{producto.categoria}</span>
