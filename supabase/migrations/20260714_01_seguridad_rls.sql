@@ -87,7 +87,20 @@ $$;
 
 -- ────────────────────────────────────────────────────────────
 -- 4. ACTIVAR RLS EN TODAS LAS TABLAS
+--    galeria puede no existir aún en la base (el diagnóstico del
+--    2026-07-17 listó 8 tablas y no la incluía); se crea si falta,
+--    con las columnas que usa AdminGallery.jsx. No-op si ya existe.
 -- ────────────────────────────────────────────────────────────
+create table if not exists public.galeria (
+    id          uuid primary key default gen_random_uuid(),
+    titulo      text not null,
+    categoria   text,
+    descripcion text,
+    imagen_url  text not null,
+    orden       int default 0,
+    fecha       timestamptz default now()
+);
+
 alter table public.clientes            enable row level security;
 alter table public.productos           enable row level security;
 alter table public.colecciones         enable row level security;
