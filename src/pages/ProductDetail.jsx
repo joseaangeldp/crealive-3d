@@ -126,25 +126,18 @@ export default function ProductDetail() {
         const clienteNombre = profile?.nombre || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Cliente'
         const clienteWA = profile?.whatsapp || '(no registrado)'
 
-        // Guardar en Supabase
+        // Guardar en Supabase vía crear_pedido (RLS bloquea el insert directo;
+        // la función asigna cliente_id desde la sesión y admite invitados)
         try {
-            if (user) {
-                await supabase.from('clientes').upsert(
-                    { id: user.id, nombre: clienteNombre, email: user.email || '', whatsapp: profile?.whatsapp || null, activo: true },
-                    { onConflict: 'id', ignoreDuplicates: true }
-                )
-            }
-            const pedidoData = {
-                producto_id: producto.id,
-                producto_nombre: producto.nombre,
-                color_elegido: colorElegido ? `${colorElegido.name} (${colorElegido.hex})` : '—',
-                mensaje: mensaje.trim(),
-                cantidad,
-                estado: 'pendiente',
-                fecha: new Date().toISOString(),
-            }
-            if (user) pedidoData.cliente_id = user.id
-            await supabase.from('pedidos').insert(pedidoData)
+            await supabase.rpc('crear_pedido', {
+                p_pedido: {
+                    producto_id: producto.id,
+                    producto_nombre: producto.nombre,
+                    color_elegido: colorElegido ? `${colorElegido.name} (${colorElegido.hex})` : '—',
+                    mensaje: mensaje.trim(),
+                    cantidad,
+                },
+            })
         } catch (_) {}
 
         const msgLines = [

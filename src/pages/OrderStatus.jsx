@@ -27,20 +27,13 @@ export default function OrderStatus() {
         const load = async () => {
             setLoading(true)
             try {
-                const { data, error } = await supabase
-                    .from('pedidos')
-                    .select('*, clientes(nombre)')
-                    .eq('id', id)
-                    .single()
+                // El parámetro de la URL es el public_token del pedido (uuid
+                // aleatorio); pedido_publico devuelve solo campos no sensibles.
+                const { data, error } = await supabase.rpc('pedido_publico', { p_token: id })
 
                 if (error || !data) { setNotFound(true); setLoading(false); return }
                 setPedido(data)
-
-                const { data: itemsData } = await supabase
-                    .from('pedido_items')
-                    .select('*')
-                    .eq('pedido_id', id)
-                setItems(itemsData || [])
+                setItems(data.items || [])
             } catch (_) {
                 setNotFound(true)
             }
@@ -79,7 +72,7 @@ export default function OrderStatus() {
                         <span className="order-status-icon">{ESTADO_ICONS[pedido.estado] || '📦'}</span>
                         <div>
                             <p className="order-status-label">Estado de pedido</p>
-                            <h1>{pedido.clientes?.nombre || 'Cliente'}</h1>
+                            <h1>{pedido.cliente_nombre || 'Cliente'}</h1>
                             {pedido.fecha && (
                                 <p className="order-status-date">Pedido el {formatFecha(pedido.fecha)}</p>
                             )}
@@ -157,7 +150,7 @@ export default function OrderStatus() {
                     <div className="order-status-footer">
                         <p>¿Tenés alguna duda sobre tu pedido?</p>
                         <a
-                            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NEGOCIO || '584246049228'}?text=${encodeURIComponent(`Hola! Quiero consultar sobre mi pedido #${id}`)}`}
+                            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NEGOCIO || '584246049228'}?text=${encodeURIComponent(`Hola! Quiero consultar sobre mi pedido ${window.location.origin}/pedido/${id}`)}`}
                             className="btn btn-primary"
                             target="_blank"
                             rel="noopener noreferrer"
