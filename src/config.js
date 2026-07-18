@@ -6,11 +6,9 @@
 // Número de WhatsApp del negocio (variable de entorno)
 export const WHATSAPP_NEGOCIO = import.meta.env.VITE_WHATSAPP_NEGOCIO || '584246049228'
 
-// Email del administrador
-export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@crealive3d.com'
-
-// API Key para email marketing (Resend)
-export const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || ''
+// REGLA DE SEGURIDAD: nada secreto puede llevar prefijo VITE_ (se publica
+// en el bundle). El rol admin vive en la tabla user_roles (Supabase RLS),
+// y cualquier envío de correo futuro va server-side en una Edge Function.
 
 // ============================================================
 // Colores de filamento disponibles

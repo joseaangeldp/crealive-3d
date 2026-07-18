@@ -5,7 +5,6 @@
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { ADMIN_EMAIL } from '../../config'
 import {
     HiOutlineClipboardList,
     HiOutlineUsers,
@@ -20,6 +19,7 @@ import {
     HiOutlineColorSwatch,
     HiOutlineSparkles,
     HiOutlineCollection,
+    HiOutlineShieldCheck,
 } from 'react-icons/hi'
 import './Admin.css'
 
@@ -34,6 +34,7 @@ const NAV_LINKS = [
     { to: '/admin/colores', label: 'Colores', Icon: HiOutlineColorSwatch },
     { to: '/admin/ediciones', label: 'Ed. Limitadas', Icon: HiOutlineSparkles },
     { to: '/admin/marketing', label: 'Email Marketing', Icon: HiOutlineMail },
+    { to: '/admin/equipo', label: 'Equipo', Icon: HiOutlineShieldCheck },
 ]
 
 export default function AdminLayout() {
@@ -45,15 +46,17 @@ export default function AdminLayout() {
     // Cerrar sidebar al navegar (móvil)
     useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
-    // Verificar que hay sesión de admin al montar — NO renderizar hasta verificar
+    // Verificar sesión + rol admin real (user_roles vía is_admin) al montar.
+    // Esto es solo UX: la autorización de verdad la aplican las policies RLS.
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (!session || session.user.email !== ADMIN_EMAIL) {
-                navigate('/admin/login')
-            } else {
-                setChecking(false)  // ← solo muestra el panel si es admin
-            }
-        }).catch(() => navigate('/admin/login'))
+        const check = async () => {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) { navigate('/admin/login'); return }
+            const { data: esAdmin, error } = await supabase.rpc('is_admin')
+            if (error || !esAdmin) { navigate('/admin/login'); return }
+            setChecking(false)
+        }
+        check().catch(() => navigate('/admin/login'))
     }, [navigate])
 
     const handleLogout = async () => {
