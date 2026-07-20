@@ -9,20 +9,27 @@
 // Las URLs guardadas en la base de datos NO cambian.
 //
 // USO:
-//   1. Variables de entorno (NUNCA commitear la service_role key):
-//        export SUPABASE_URL="https://<project-ref>.supabase.co"
-//        export SUPABASE_SERVICE_ROLE_KEY="<service-role-key>"
+//   1. En .env.local (gitignored — la service_role NUNCA se commitea ni va al bundle):
+//        SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+//        (la URL se reutiliza de VITE_SUPABASE_URL; o define SUPABASE_URL)
 //   2. Dry-run (por defecto — solo reporta, no toca nada):
 //        node scripts/backfill-images.js
 //   3. Aplicar de verdad (pedir permiso antes de correr en producción):
 //        node scripts/backfill-images.js --execute
 //
-// Requiere: npm i -D sharp  (ya en devDependencies)
+// Requiere: npm i -D sharp dotenv  (ya en devDependencies)
 
+import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
+import dotenv from 'dotenv'
 import sharp from 'sharp'
 
-const SUPABASE_URL = process.env.SUPABASE_URL
+// Credenciales desde .env.local (gitignored), no por export inline.
+dotenv.config({ path: fileURLToPath(new URL('../.env.local', import.meta.url)) })
+
+// La URL no es secreta: se acepta la del frontend (VITE_) para no duplicarla.
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+// La service_role SÍ es secreta y NO lleva prefijo VITE_ (jamás debe ir al bundle).
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const EXECUTE = process.argv.includes('--execute')
 
@@ -33,9 +40,9 @@ const WEBP_QUALITY = 80
 const SKIP_UNDER_BYTES = 350 * 1024
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    console.error('❌ Faltan SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY en el entorno.')
-    console.error('   export SUPABASE_URL="https://<ref>.supabase.co"')
-    console.error('   export SUPABASE_SERVICE_ROLE_KEY="<key>"')
+    console.error('❌ Falta configurar .env.local con:')
+    console.error('   SUPABASE_SERVICE_ROLE_KEY=<service-role-key>   (obligatoria, sin prefijo VITE_)')
+    console.error('   VITE_SUPABASE_URL=...  o  SUPABASE_URL=...      (una de las dos)')
     process.exit(1)
 }
 

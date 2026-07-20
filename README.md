@@ -29,16 +29,27 @@ Las imágenes del catálogo/galería se sirven directo desde Supabase Storage
 Sobrescribe el **mismo path**, así que las URLs guardadas en la base de datos
 no cambian.
 
-```bash
-# Credenciales SOLO por entorno — la service_role key NUNCA se commitea
-export SUPABASE_URL="https://<project-ref>.supabase.co"
-export SUPABASE_SERVICE_ROLE_KEY="<service-role-key>"
+Las credenciales se cargan desde `.env.local` (gitignored) con `dotenv`. Agregá
+solo esta línea a tu `.env.local` local (la URL se reutiliza de
+`VITE_SUPABASE_URL`, que ya está):
 
+```
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+```
+
+> La `service_role` key da acceso total saltándose RLS: va **solo** en
+> `.env.local`, **nunca** commiteada, **nunca** en Vercel y **nunca** con prefijo
+> `VITE_` (eso la publicaría en el bundle). Se obtiene en Supabase → Project
+> Settings → API → `service_role`.
+
+```bash
 node scripts/backfill-images.js            # dry-run: solo reporta pesos
 node scripts/backfill-images.js --execute  # aplica (¡sobrescribe Storage!)
 ```
 
-Es de un solo uso: las subidas nuevas ya salen comprimidas del panel admin.
+Es de un solo uso: las subidas nuevas ya salen comprimidas del panel admin. Usa
+la `service_role`, así que **salta las policies de Storage** — funciona aunque la
+escritura pública esté restringida a admins.
 
 ## Variables de entorno
 
@@ -49,8 +60,7 @@ Es de un solo uso: las subidas nuevas ya salen comprimidas del panel admin.
 | `VITE_WHATSAPP_NEGOCIO` | `.env` / Vercel | WhatsApp del negocio |
 | `VITE_RESEND_API_KEY` | `.env` / Vercel | Envío de emails |
 | `VITE_ADMIN_EMAIL` | `.env` / Vercel | Acceso al panel `/admin` |
-| `SUPABASE_URL` | solo terminal local | Script de backfill |
-| `SUPABASE_SERVICE_ROLE_KEY` | solo terminal local | Script de backfill — **nunca commitear** |
+| `SUPABASE_SERVICE_ROLE_KEY` | solo `.env.local` | Script de backfill — **secreta; nunca commitear, nunca en Vercel, nunca con prefijo `VITE_`** |
 
 ## Flujo de trabajo
 
