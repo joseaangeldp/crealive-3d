@@ -89,39 +89,62 @@ async function main() {
             'anónimo: SÍ consulta el pedido por token, sin datos sensibles', pub.error?.message)
     }
 
-    // ── 2. Como USUARIO RECIÉN REGISTRADO ──
-    console.log('\n— Usuario recién registrado —')
-    const emailTest = `test-rls-${Date.now()}@example.com`
-    const alta = await anon.auth.signUp({
-        email: emailTest,
-        password: `Rls!${Date.now()}x`,
-        options: { data: { nombre: 'Test RLS', whatsapp: null } },
-    })
+    // ── 2. Como USUARIO AUTENTICADO NO-ADMIN ──
+    // El proyecto valida emails contra MX reales, así que no se puede crear
+    // un usuario efímero desde aquí. Preferimos iniciar sesión con una cuenta
+    // NO admin ya registrada (TEST_USER_EMAIL / TEST_USER_PASSWORD en
+    // .env.local); el alta efímera queda como último recurso.
+    console.log('\n— Usuario autenticado (no admin) —')
+    let sesion = null
+    let usuarioEfimero = null
 
-    if (alta.error || !alta.data.session) {
-        console.log(`  SKIP  no se obtuvo sesión (${alta.error?.message || 'confirmación de email activa'});`)
-        console.log('        repetí esta parte logueado con una cuenta normal si hace falta.')
+    if (env.TEST_USER_EMAIL && env.TEST_USER_PASSWORD) {
+        const login = await anon.auth.signInWithPassword({
+            email: env.TEST_USER_EMAIL, password: env.TEST_USER_PASSWORD,
+        })
+        if (login.error) console.log(`  SKIP  no se pudo iniciar sesión con TEST_USER_* (${login.error.message})`)
+        else sesion = login.data
     } else {
-        const db = anon // el cliente ya tiene la sesión del usuario nuevo
+        const emailTest = `rls-check-${Date.now()}@gmail.com`
+        const alta = await anon.auth.signUp({
+            email: emailTest, password: `Rls!${Date.now()}x`,
+            options: { data: { nombre: 'Test RLS', whatsapp: null } },
+        })
+        if (alta.error || !alta.data.session) {
+            console.log(`  SKIP  sin sesión de prueba (${alta.error?.message || 'confirmación de email activa'}).`)
+            console.log('        Definí TEST_USER_EMAIL y TEST_USER_PASSWORD en .env.local con una cuenta NO admin ya registrada.')
+        } else { sesion = alta.data; usuarioEfimero = emailTest }
+    }
 
-        const cli = await db.from('clientes').select('email')
-        const soloPropia = !cli.error && (cli.data || []).every(c => c.email === emailTest)
-        reporte(soloPropia, 'registrado: solo ve SU propia fila de clientes',
-            cli.error?.message || `filas: ${(cli.data || []).length}`)
+    if (sesion) {
+        const db = anon // el cliente ya lleva la sesión del usuario
+        const uid = sesion.user.id
 
-        const auto = await db.from('user_roles')
-            .insert({ user_id: alta.data.user.id, role: 'admin' }).select()
-        reporte(Boolean(auto.error), 'registrado: NO puede auto-asignarse rol admin', auto.error?.code)
+        const cli = await db.from('clientes').select('id')
+        const soloPropia = !cli.error && (cli.data || []).length > 0 && (cli.data || []).every(c => c.id === uid)
+        reporte(soloPropia, 'autenticado: solo ve SU propia fila de clientes (no la PII de otros)',
+            cli.error?.message || `filas visibles: ${(cli.data || []).length}`)
 
-        await pruebasDeEscritura(db, 'registrado')
+        const roles = await db.from('user_roles').select('*')
+        reporte(!roles.error && (roles.data || []).every(r => r.user_id === uid),
+            'autenticado: no lee roles ajenos')
 
-        const perfil = await db.from('clientes').select('nombre').eq('id', alta.data.user.id).single()
-        reporte(!perfil.error && perfil.data?.nombre === 'Test RLS',
-            'registrado: el trigger creó su perfil en clientes', perfil.error?.message)
+        const auto = await db.from('user_roles').insert({ user_id: uid, role: 'admin' }).select()
+        reporte(Boolean(auto.error), 'autenticado: NO puede auto-asignarse rol admin', auto.error?.code)
+
+        await pruebasDeEscritura(db, 'autenticado')
+
+        const perfil = await db.from('clientes').select('nombre').eq('id', uid).single()
+        reporte(!perfil.error && Boolean(perfil.data),
+            'autenticado: su perfil existe en clientes (trigger de registro)', perfil.error?.message)
+
+        await db.auth.signOut()
     }
 
     console.log(`\n${fallos === 0 ? 'TODO OK — superficie cerrada.' : `${fallos} verificaciones FALLARON — revisar policies.`}`)
-    console.log(`Limpieza manual: borrar el usuario ${emailTest} (Auth) y el pedido "TEST verificación — borrar".\n`)
+    const limpieza = ['el pedido "TEST verificación — borrar"']
+    if (usuarioEfimero) limpieza.unshift(`el usuario ${usuarioEfimero} (Auth)`)
+    console.log(`Limpieza manual: borrar ${limpieza.join(' y ')}.\n`)
     process.exit(fallos === 0 ? 0 : 1)
 }
 
