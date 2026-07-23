@@ -10,14 +10,11 @@
 // Requiere .env.local (gitignored) con:
 //   VITE_SUPABASE_URL=...
 //   VITE_SUPABASE_ANON_KEY=...
-// Y para el bloque autenticado, cualquiera de estas dos:
-//   SUPABASE_SERVICE_ROLE_KEY=...   (recomendado: crea un usuario efímero
-//                                    ya confirmado y lo borra al terminar)
-//   TEST_USER_EMAIL=... + TEST_USER_PASSWORD=...  (cuenta NO admin ya registrada)
+//   QA_TEST_EMAIL=... + QA_TEST_PASSWORD=...   (usuario QA fijo, NO admin,
+//     creado a mano en el dashboard con Auto Confirm — reproducible y reusable)
 //
-// La service_role se usa SOLO para setup/limpieza (crear y borrar el usuario
-// efímero y el pedido de prueba); las pruebas adversariales corren con la
-// anon key. Autolimpia si hay service_role; si no, deja una nota manual.
+// No usa service_role ni crea usuarios: el bloque autenticado inicia sesión
+// con el usuario QA. Deja una nota de limpieza del pedido de prueba.
 // ============================================================
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
@@ -94,42 +91,19 @@ async function main() {
     }
 
     // ── 2. Como USUARIO AUTENTICADO NO-ADMIN ──
-    // Con service_role creamos un usuario efímero ya confirmado (sin depender
-    // de la confirmación por email); si no, caemos a TEST_USER_* ya registrado.
-    // Las pruebas SIEMPRE corren con la anon key + sesión del usuario.
+    // Inicia sesión con el usuario QA fijo (creado a mano con Auto Confirm).
+    // Las pruebas corren con la anon key + la sesión de ese usuario.
     console.log('\n— Usuario autenticado (no admin) —')
-    const SERVICE_ROLE = env.SUPABASE_SERVICE_ROLE_KEY
-    const admin = SERVICE_ROLE
-        ? createClient(URL_, SERVICE_ROLE, { auth: { persistSession: false, autoRefreshToken: false } })
-        : null
-
     let sesion = null
-    let efimeroId = null
 
-    if (admin) {
-        const emailEf = `rls-ephemeral-${Date.now()}@crealive-qa.dev`
-        const passEf = `Rls!${Date.now()}xY`
-        const nuevo = await admin.auth.admin.createUser({
-            email: emailEf, password: passEf, email_confirm: true,
-            user_metadata: { nombre: 'Test RLS efímero' },
-        })
-        if (nuevo.error) {
-            console.log(`  SKIP  no se pudo crear el usuario efímero con service_role (${nuevo.error.message})`)
-        } else {
-            efimeroId = nuevo.data.user.id
-            const login = await anon.auth.signInWithPassword({ email: emailEf, password: passEf })
-            if (login.error) console.log(`  SKIP  usuario efímero creado pero no inició sesión (${login.error.message})`)
-            else sesion = login.data
-        }
-    } else if (env.TEST_USER_EMAIL && env.TEST_USER_PASSWORD) {
+    if (env.QA_TEST_EMAIL && env.QA_TEST_PASSWORD) {
         const login = await anon.auth.signInWithPassword({
-            email: env.TEST_USER_EMAIL, password: env.TEST_USER_PASSWORD,
+            email: env.QA_TEST_EMAIL, password: env.QA_TEST_PASSWORD,
         })
-        if (login.error) console.log(`  SKIP  no se pudo iniciar sesión con TEST_USER_* (${login.error.message})`)
+        if (login.error) console.log(`  SKIP  no se pudo iniciar sesión con QA_TEST_* (${login.error.message})`)
         else sesion = login.data
     } else {
-        console.log('  SKIP  sin forma de obtener una sesión no-admin.')
-        console.log('        Agregá SUPABASE_SERVICE_ROLE_KEY (recomendado) o TEST_USER_EMAIL/PASSWORD a .env.local.')
+        console.log('  SKIP  faltan QA_TEST_EMAIL / QA_TEST_PASSWORD en .env.local (usuario QA no admin).')
     }
 
     if (sesion) {
@@ -157,19 +131,16 @@ async function main() {
         await db.auth.signOut()
     }
 
-    // ── Limpieza ──
-    console.log(`\n${fallos === 0 ? 'TODO OK — superficie cerrada.' : `${fallos} verificaciones FALLARON — revisar policies.`}`)
-    if (admin) {
-        if (ped.data) await admin.from('pedidos').delete().eq('public_token', ped.data)
-        if (efimeroId) {
-            await admin.from('clientes').delete().eq('id', efimeroId)
-            await admin.auth.admin.deleteUser(efimeroId)
-        }
-        console.log('Limpieza automática: usuario efímero y pedido de prueba borrados.\n')
-    } else {
-        console.log('Limpieza manual: borrar el pedido "TEST verificación — borrar".\n')
-    }
-    process.exit(fallos === 0 ? 0 : 1)
+    // ── Cierre ──
+    // "Verde" real = 0 fallos Y el bloque autenticado efectivamente corrió.
+    const completo = fallos === 0 && Boolean(sesion)
+    console.log('\n' + (completo
+        ? 'TODO OK — superficie cerrada (anónimo + autenticado).'
+        : fallos > 0
+            ? `${fallos} verificaciones FALLARON — revisar policies.`
+            : 'INCOMPLETO — el bloque autenticado no corrió (faltan QA_TEST_*).'))
+    console.log('Limpieza manual: borrar el pedido "TEST verificación — borrar" del panel.\n')
+    process.exit(completo ? 0 : 1)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })
