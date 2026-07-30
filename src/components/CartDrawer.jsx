@@ -20,49 +20,26 @@ export default function CartDrawer({ onClose }) {
         if (items.length === 0) return
 
         // ── 1. Guardar en Supabase PRIMERO (antes de redirigir) ──
+        // crear_pedido es el único camino de escritura (RLS bloquea el
+        // insert directo); funciona logueado o como invitado y crea
+        // pedido + items en una sola transacción.
         try {
-            // Garantizar que el cliente exista en la tabla clientes (evita FK violation)
-            if (user) {
-                const nombreCliente = profile?.nombre ||
-                    user.user_metadata?.full_name ||
-                    user.user_metadata?.name ||
-                    user.email?.split('@')[0] || ''
-                await supabase.from('clientes').upsert(
-                    { id: user.id, nombre: nombreCliente, email: user.email || '', whatsapp: profile?.whatsapp || null, activo: true },
-                    { onConflict: 'id', ignoreDuplicates: true }
-                )
-            }
-
-            const pedidoData = {
-                producto_id: items[0].producto?.id,
-                producto_nombre: `Pedido múltiple (${items.length} items)`,
-                color_elegido: '—',
-                cantidad: itemCount,
-                estado: 'pendiente',
-                fecha: new Date().toISOString(),
-            }
-            if (user) pedidoData.cliente_id = user.id
-
-            const { data: pedido, error: pedidoError } = await supabase
-                .from('pedidos')
-                .insert(pedidoData)
-                .select()
-                .single()
-
-            if (pedidoError) console.error('Error insertando pedido:', pedidoError.message)
-
-            // Insertar items individuales
-            if (pedido?.id) {
-                const pedidoItems = items.map(item => ({
-                    pedido_id: pedido.id,
+            const { error: pedidoError } = await supabase.rpc('crear_pedido', {
+                p_pedido: {
+                    producto_id: items[0].producto?.id,
+                    producto_nombre: `Pedido múltiple (${items.length} items)`,
+                    color_elegido: '—',
+                    cantidad: itemCount,
+                },
+                p_items: items.map(item => ({
                     producto_id: item.producto?.id,
                     producto_nombre: item.producto?.nombre,
                     color_elegido: item.color ? `${item.color.name} (${item.color.hex})` : '—',
                     cantidad: item.cantidad,
                     mensaje_especial: item.mensaje?.trim() || null,
-                }))
-                await supabase.from('pedido_items').insert(pedidoItems)
-            }
+                })),
+            })
+            if (pedidoError) console.error('Error insertando pedido:', pedidoError.message)
         } catch (err) {
             console.error('Error guardando pedido:', err)
         }

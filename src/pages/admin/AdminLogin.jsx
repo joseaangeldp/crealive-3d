@@ -4,7 +4,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { ADMIN_EMAIL } from '../../config'
 import '../../pages/Auth.css'
 
 export default function AdminLogin() {
@@ -20,13 +19,14 @@ export default function AdminLogin() {
         setError('')
         setLoading(true)
         try {
-            const { data, error: authErr } = await supabase.auth.signInWithPassword(form)
+            const { error: authErr } = await supabase.auth.signInWithPassword(form)
             if (authErr) throw authErr
 
-            // Verificar que el email sea el admin configurado
-            if (data.user.email !== ADMIN_EMAIL) {
+            // Verificar el rol real en user_roles (la RLS es la defensa de fondo)
+            const { data: esAdmin } = await supabase.rpc('is_admin')
+            if (!esAdmin) {
                 await supabase.auth.signOut()
-                throw new Error('No tenés permisos de administrador.')
+                throw new Error('Esta cuenta no tiene permisos de administración.')
             }
 
             navigate('/admin')

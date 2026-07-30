@@ -21,7 +21,7 @@ function CrealiveIsotipo({ size = 28, color = 'currentColor' }) {
 }
 
 export default function TopNav() {
-    const { user, profile, logout } = useAuth()
+    const { user, profile, isAdmin, logout } = useAuth()
     const { itemCount } = useCart()
     const [cartOpen, setCartOpen] = useState(false)
 
@@ -41,6 +41,7 @@ export default function TopNav() {
                         <li><NavLink to="/catalogo">Catálogo</NavLink></li>
                         <li><NavLink to="/galeria">Galería</NavLink></li>
                         {user && <li><NavLink to="/perfil">Mi cuenta</NavLink></li>}
+                        {isAdmin && <li><NavLink to="/admin">Panel admin</NavLink></li>}
                     </ul>
 
                     <div className="topnav__actions">

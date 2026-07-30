@@ -1,7 +1,10 @@
 // ============================================================
 // src/contexts/AuthContext.jsx — Contexto global de autenticación
-// Crealive 3D — Usa Supabase Auth + tabla clientes para perfil
-// Soporta email/password Y Google OAuth
+// Crealive 3D — Supabase Auth (email/password y Google OAuth)
+//
+// El perfil en la tabla clientes lo crea un trigger server-side
+// (handle_new_user) al registrarse; el frontend solo lo lee.
+// El rol admin vive en user_roles y se lee aquí una vez por sesión.
 // ============================================================
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
@@ -12,46 +15,27 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [session, setSession] = useState(null)
     const [profile, setProfile] = useState(null)
+    const [isAdmin, setIsAdmin] = useState(false)
     const [loading, setLoading] = useState(true)
 
-    // Cargar perfil desde la tabla clientes
+    // Cargar perfil (tabla clientes) y rol (tabla user_roles)
     const fetchProfile = async (userId) => {
-        if (!userId) { setProfile(null); return }
-        const { data } = await supabase
-            .from('clientes')
-            .select('nombre, email, whatsapp')
-            .eq('id', userId)
-            .single()
-        setProfile(data || null)
-    }
-
-    // Crear/actualizar fila en clientes si viene de Google o es usuario nuevo
-    const upsertClienteGoogle = async (user) => {
-        if (!user) return
-        const provider = user.app_metadata?.provider
-        if (provider !== 'google') return
-
-        const nombre = user.user_metadata?.full_name ||
-            user.user_metadata?.name ||
-            user.email?.split('@')[0] || ''
-        const email = user.email || ''
-
-        // Upsert sin avatar_url para evitar error si la columna no existe
-        const { error } = await supabase.from('clientes').upsert(
-            { id: user.id, nombre, email, whatsapp: null, activo: true, fecha_registro: new Date().toISOString() },
-            { onConflict: 'id', ignoreDuplicates: false }
-        )
-        if (error) console.warn('upsertClienteGoogle error:', error.message)
+        if (!userId) { setProfile(null); setIsAdmin(false); return }
+        const [{ data: perfil }, { data: rol }] = await Promise.all([
+            supabase.from('clientes').select('nombre, email, whatsapp').eq('id', userId).single(),
+            supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+        ])
+        setProfile(perfil || null)
+        setIsAdmin(rol?.role === 'admin')
     }
 
     useEffect(() => {
-        // Obtener sesión inicial
+        // Sesión inicial
         supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session)
             setUser(session?.user ?? null)
             if (session?.user) {
                 try {
-                    await upsertClienteGoogle(session.user)
                     await fetchProfile(session.user.id)
                 } catch (e) {
                     console.warn('Error cargando perfil:', e)
@@ -60,28 +44,26 @@ export function AuthProvider({ children }) {
             setLoading(false)
         }).catch(() => setLoading(false))
 
-        // Escuchar cambios de sesión (incluye el redirect de Google)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        // Cambios de sesión (incluye el redirect de Google)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session)
             setUser(session?.user ?? null)
             if (session?.user) {
-                try {
-                    if (_event === 'SIGNED_IN') {
-                        await upsertClienteGoogle(session.user)
-                    }
-                    await fetchProfile(session.user.id)
-                } catch (e) {
-                    console.warn('Error en auth state change:', e)
-                }
+                // Sin await: llamadas a supabase dentro del callback de
+                // onAuthStateChange pueden bloquear el lock interno de auth.
+                fetchProfile(session.user.id).catch(e => console.warn('Error en auth state change:', e))
             } else {
                 setProfile(null)
+                setIsAdmin(false)
             }
         })
 
         return () => subscription.unsubscribe()
     }, [])
 
-    // Registro con email/password
+    // Registro con email/password.
+    // nombre y whatsapp viajan en metadata; el trigger handle_new_user
+    // crea la fila en clientes (funciona aunque falte confirmar el email).
     const register = async ({ nombre, email, whatsapp, password }) => {
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -91,18 +73,7 @@ export function AuthProvider({ children }) {
             },
         })
         if (error) throw error
-
-        // Insertar en tabla clientes
-        await supabase.from('clientes').insert({
-            id: data.user.id,
-            nombre,
-            email,
-            whatsapp,
-            activo: true,
-            fecha_registro: new Date().toISOString(),
-        })
-
-        await fetchProfile(data.user.id)
+        if (data.session) await fetchProfile(data.user.id)
         return data
     }
 
@@ -132,10 +103,11 @@ export function AuthProvider({ children }) {
     const logout = async () => {
         await supabase.auth.signOut()
         setProfile(null)
+        setIsAdmin(false)
     }
 
     return (
-        <AuthContext.Provider value={{ user, session, profile, loading, register, login, loginWithGoogle, logout }}>
+        <AuthContext.Provider value={{ user, session, profile, isAdmin, loading, register, login, loginWithGoogle, logout }}>
             {children}
         </AuthContext.Provider>
     )
