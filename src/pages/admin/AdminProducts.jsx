@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import { HiPlus, HiPencil, HiEye, HiEyeOff, HiSearch, HiUpload, HiTrash } from 'react-icons/hi'
 import { supabase } from '../../lib/supabase'
+import { compressProductImage } from '../../lib/compressProductImage'
 
 const EMPTY_FORM = {
     nombre: '', categoria: '', descripcion: '', precio: '',
@@ -137,10 +138,14 @@ export default function AdminProducts() {
         try {
             const newUrls = []
             for (const file of files) {
-                const ext = file.name.split('.').pop()
-                const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+                const { file: comprimido, extension, contentType } = await compressProductImage(file)
+                const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${extension}`
                 const { error: uploadError } = await supabase.storage
-                    .from(BUCKET).upload(fileName, file, { upsert: true })
+                    .from(BUCKET).upload(fileName, comprimido, {
+                        upsert: true,
+                        contentType,
+                        cacheControl: '31536000',
+                    })
                 if (uploadError) throw uploadError
                 const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
                 newUrls.push(data.publicUrl)
