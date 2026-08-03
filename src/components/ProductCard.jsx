@@ -43,7 +43,7 @@ function CatIcon({ categoria }) {
     )
 }
 
-export default function ProductCard({ producto, onPersonalizar, edicionActiva, offline }) {
+export default function ProductCard({ producto, onPersonalizar, edicionActiva, offline, priority = false }) {
     return (
         <div className="product-card card">
             <Link to={`/producto/${producto.id}`} className="product-card__img-wrap" style={{ textDecoration: 'none', display: 'block', position: 'relative' }}>
@@ -59,7 +59,8 @@ export default function ProductCard({ producto, onPersonalizar, edicionActiva, o
                         src={producto.imagen_url || ''}
                         alt={producto.nombre}
                         className="product-card__img"
-                        loading="lazy"
+                        loading={priority ? 'eager' : 'lazy'}
+                        fetchpriority={priority ? 'high' : 'auto'}
                         decoding="async"
                         width="800"
                         height="600"

@@ -9,6 +9,10 @@ import ProductCard from '../components/ProductCard'
 import ProductCustomizer from '../components/ProductCustomizer'
 import './Catalog.css'
 
+// Cuántas cards de la primera fila cargan eager (no lazy) por ser above-the-fold.
+// 4 cubre el ancho típico de escritorio con el grid minmax(240px,1fr).
+const ABOVE_THE_FOLD = 4
+
 // Productos de demo (se usan si Supabase no está configurado)
 const DEMO_PRODUCTOS = [
     { id: '1', nombre: 'Organizador Modular', categoria: 'Porta objetos / Organizadores', descripcion: 'Perfecto para escritorios y mesas de trabajo', precio: 12.99, imagen_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80', activo: true },
@@ -188,13 +192,16 @@ export default function Catalog() {
                     </div>
                 ) : (
                     <div className="products-grid">
-                        {filtrados.map(producto => (
+                        {filtrados.map((producto, i) => (
                             <ProductCard
                                 key={producto.id}
                                 producto={producto}
                                 onPersonalizar={() => setSelected(producto)}
                                 edicionActiva={!!edicionesActivas[producto.id]}
                                 offline={isOffline}
+                                // Primera fila (above-the-fold): eager, sin lazy.
+                                // El grid es minmax(240px,1fr) → hasta ~4-5 columnas.
+                                priority={i < ABOVE_THE_FOLD}
                             />
                         ))}
                     </div>
