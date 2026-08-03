@@ -33,7 +33,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const EXECUTE = process.argv.includes('--execute')
 
-const BUCKETS = ['productos', 'galeria']
+const BUCKETS = ['productos', 'galeria', 'colecciones']
 const MAX_DIMENSION = 1600
 const WEBP_QUALITY = 80
 // No recomprimir lo que ya está liviano (subidas nuevas ya vienen en WebP)
