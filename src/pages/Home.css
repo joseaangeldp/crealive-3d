@@ -35,19 +35,25 @@
 }
 
 .carousel-img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center 20%;
 }
 
-/* Gradiente más fuerte en la parte inferior-izquierda para legibilidad */
+/* Overlay unificado: foto limpia arriba, borgoña oscuro abajo para legibilidad.
+   Los stops rgba son --color-burgundy (74,27,40) y --color-burgundy-mid (122,46,64). */
 .carousel-overlay {
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(to top, rgba(20,10,4,0.80) 0%, rgba(20,10,4,0.40) 45%, transparent 100%),
-        linear-gradient(to right, rgba(20,10,4,0.50) 0%, transparent 60%);
+    z-index: 1;
+    background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(74, 27, 40, 0.15) 40%,
+        rgba(122, 46, 64, 0.75) 72%,
+        rgba(74, 27, 40, 0.94) 100%);
     display: flex;
     align-items: flex-end;
     padding: 0 0 52px 0;
@@ -105,23 +111,25 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* CTA dentro del carousel */
+/* CTA dentro del carousel — relleno sólido crema, la CTA con peso */
 .carousel-content .btn-ghost {
-    background: rgba(255,255,255,0.15);
-    border: 1.5px solid rgba(255,255,255,0.5);
-    color: #fff;
-    backdrop-filter: blur(8px);
-    font-weight: 600;
+    background: var(--color-surface-2);   /* crema del packaging (#F3EDE2) */
+    border: none;
+    color: var(--color-burgundy);
+    backdrop-filter: none;
+    font-weight: 700;
     font-size: 14px;
-    padding: 11px 26px;
+    padding: 12px 28px;
     border-radius: var(--radius-full);
-    transition: all 0.22s;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    transition: transform 0.22s, box-shadow 0.22s, background 0.22s;
 }
 
 .carousel-content .btn-ghost:hover {
     background: #fff;
-    border-color: #fff;
-    color: var(--color-brown);
+    color: var(--color-burgundy);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.24);
 }
 
 /* ─── Mobile hero ─── */
@@ -132,10 +140,8 @@
     }
 
     .carousel-overlay {
+        /* Hereda el mismo gradiente borgoña del desktop (unificado) */
         padding: 0 0 40px 0;
-        background:
-            linear-gradient(to top, rgba(20,10,4,0.88) 0%, rgba(20,10,4,0.45) 50%, transparent 100%),
-            linear-gradient(to right, rgba(20,10,4,0.30) 0%, transparent 100%);
         align-items: flex-end;
         justify-content: center;
     }
