@@ -68,7 +68,15 @@ export default function Gallery() {
                             className="gallery-card"
                             onClick={() => setLightbox(item)}
                         >
-                            <img src={item.imagen_url} alt={item.titulo} className="gallery-img" />
+                            <img
+                                src={item.imagen_url}
+                                alt={item.titulo}
+                                className="gallery-img"
+                                loading="lazy"
+                                decoding="async"
+                                width="800"
+                                height="600"
+                            />
                             <div className="gallery-info">
                                 <span className="gallery-cat">{item.categoria}</span>
                                 <h3>{item.titulo}</h3>
@@ -105,7 +113,7 @@ export default function Gallery() {
                     <div className="overlay" onClick={() => setLightbox(null)} style={{ zIndex: 500 }} />
                     <div className="lightbox" style={{ zIndex: 501 }}>
                         <button className="modal-close" onClick={() => setLightbox(null)} aria-label="Cerrar">✕</button>
-                        <img src={lightbox.imagen_url} alt={lightbox.titulo} className="lightbox-img" />
+                        <img src={lightbox.imagen_url} alt={lightbox.titulo} className="lightbox-img" decoding="async" />
                         <div className="lightbox-info">
                             <span className="gallery-cat">{lightbox.categoria}</span>
                             <h2>{lightbox.titulo}</h2>

@@ -8,6 +8,9 @@ dist/
 dist-ssr/
 build/
 
+# Respaldo local de Storage (scripts/backup-bucket.mjs)
+backup/
+
 # Variables de entorno (¡nunca subir!)
 .env
 .env.local

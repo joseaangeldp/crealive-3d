@@ -88,9 +88,16 @@ export default function Home() {
             <section className="hero-carousel" ref={heroRef}>
                 <HeroParticles />
                 <div className="carousel-track" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
-                    {colecciones.map(col => (
+                    {colecciones.map((col, i) => (
                         <div key={col.id} className="carousel-slide">
-                            <img src={col.imagen_url} alt={col.titulo} className="carousel-img" />
+                            <img
+                                src={col.imagen_url}
+                                alt={col.titulo}
+                                className="carousel-img"
+                                loading={i === 0 ? 'eager' : 'lazy'}
+                                fetchpriority={i === 0 ? 'high' : 'auto'}
+                                decoding="async"
+                            />
                             <div className="carousel-overlay">
                                 <div className="carousel-content hero-fadein">
                                     <span className="carousel-label">Novedades</span>

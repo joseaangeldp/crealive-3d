@@ -8,6 +8,7 @@ import {
     HiPhotograph, HiArrowUp, HiArrowDown,
 } from 'react-icons/hi'
 import { supabase } from '../../lib/supabase'
+import { compressProductImage } from '../../lib/compressProductImage'
 import { CATEGORIAS } from '../../config'
 
 const BUCKET = 'galeria'
@@ -83,11 +84,15 @@ export default function AdminGallery() {
         setUploading(true)
         setSaveError('')
         try {
-            const ext = file.name.split('.').pop()
-            const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+            const { file: comprimido, extension, contentType } = await compressProductImage(file)
+            const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${extension}`
             const { error: uploadError } = await supabase.storage
                 .from(BUCKET)
-                .upload(fileName, file, { upsert: true })
+                .upload(fileName, comprimido, {
+                    upsert: true,
+                    contentType,
+                    cacheControl: '31536000',
+                })
             if (uploadError) throw uploadError
             const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
             setForm(f => ({ ...f, imagen_url: data.publicUrl }))

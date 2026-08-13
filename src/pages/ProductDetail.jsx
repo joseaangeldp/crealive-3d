@@ -196,6 +196,7 @@ export default function ProductDetail() {
                                     src={allImages[imgIndex]}
                                     alt={producto.nombre}
                                     className="gallery-main-img"
+                                    decoding="async"
                                 />
                                 {allImages.length > 1 && (
                                     <>
@@ -224,7 +225,7 @@ export default function ProductDetail() {
                                     onClick={() => setImgIndex(i)}
                                     className={`gallery-thumb-btn${i === imgIndex ? ' active' : ''}`}
                                 >
-                                    <img src={url} alt={`thumb-${i}`} />
+                                    <img src={url} alt={`thumb-${i}`} loading="lazy" decoding="async" width="80" height="80" />
                                 </button>
                             ))}
                         </div>
