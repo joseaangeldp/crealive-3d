@@ -3,6 +3,8 @@
 // Incluye modal de "Diseño desde cero" con envío por WhatsApp
 // ============================================================
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { HiOutlineSearch, HiX } from 'react-icons/hi'
 import { supabase } from '../lib/supabase'
 import { CATEGORIAS as CATEGORIAS_FALLBACK, WHATSAPP_NEGOCIO, FILAMENT_COLORS } from '../config'
 import ProductCard from '../components/ProductCard'
@@ -12,6 +14,9 @@ import './Catalog.css'
 // Cuántas cards de la primera fila cargan eager (no lazy) por ser above-the-fold.
 // 4 cubre el ancho típico de escritorio con el grid minmax(240px,1fr).
 const ABOVE_THE_FOLD = 4
+
+// Normaliza para buscar sin distinguir acentos ni mayúsculas
+const normalizar = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 // Productos de demo (se usan si Supabase no está configurado)
 const DEMO_PRODUCTOS = [
@@ -96,7 +101,9 @@ function CustomOrderModal({ onClose }) {
 export default function Catalog() {
     const [productos, setProductos] = useState(DEMO_PRODUCTOS)
     const [categorias, setCategorias] = useState(CATEGORIAS_FALLBACK)
+    const [searchParams] = useSearchParams()
     const [categoria, setCategoria] = useState('Todos')
+    const [busqueda, setBusqueda] = useState(searchParams.get('q') || '')
     const [selected, setSelected] = useState(null)
     const [customOpen, setCustomOpen] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -148,9 +155,20 @@ export default function Catalog() {
         load()
     }, [])
 
-    const filtrados = categoria === 'Todos'
-        ? productos
-        : productos.filter(p => p.categoria === categoria)
+    // Sincronizar con el término que llega desde el buscador global (?q=…)
+    useEffect(() => {
+        setBusqueda(searchParams.get('q') || '')
+    }, [searchParams])
+
+    const q = normalizar(busqueda.trim())
+    const filtrados = productos.filter(p => {
+        const okCategoria = categoria === 'Todos' || p.categoria === categoria
+        if (!okCategoria) return false
+        if (!q) return true
+        return normalizar(p.nombre).includes(q) ||
+            normalizar(p.descripcion).includes(q) ||
+            normalizar(p.categoria).includes(q)
+    })
 
     return (
         <main>
@@ -169,6 +187,29 @@ export default function Catalog() {
             )}
 
             <div className="container section">
+                {/* Buscador */}
+                <div className="catalog-search">
+                    <HiOutlineSearch className="catalog-search__icon" size={20} aria-hidden="true" />
+                    <input
+                        type="search"
+                        className="catalog-search__input"
+                        placeholder="Buscar piezas…"
+                        value={busqueda}
+                        onChange={e => setBusqueda(e.target.value)}
+                        aria-label="Buscar productos"
+                    />
+                    {busqueda && (
+                        <button
+                            type="button"
+                            className="catalog-search__clear"
+                            onClick={() => setBusqueda('')}
+                            aria-label="Limpiar búsqueda"
+                        >
+                            <HiX size={18} />
+                        </button>
+                    )}
+                </div>
+
                 {/* Filtros de categoría */}
                 <div className="category-filters">
                     {categorias.map(cat => (
@@ -187,8 +228,17 @@ export default function Catalog() {
                     <div className="spinner" />
                 ) : filtrados.length === 0 ? (
                     <div className="empty-state">
-                        <div className="icon">🔍</div>
-                        <h3>No hay productos en esta categoría</h3>
+                        {busqueda ? (
+                            <>
+                                <h3>Sin resultados para “{busqueda.trim()}”</h3>
+                                <p>Probá con otra palabra o mirá todas las piezas.</p>
+                                <button className="btn btn-outline" onClick={() => { setBusqueda(''); setCategoria('Todos') }}>
+                                    Ver todo el catálogo
+                                </button>
+                            </>
+                        ) : (
+                            <h3>No hay piezas en esta categoría todavía</h3>
+                        )}
                     </div>
                 ) : (
                     <div className="products-grid">

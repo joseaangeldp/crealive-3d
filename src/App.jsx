@@ -2,7 +2,7 @@
 // src/App.jsx — Configuración de rutas principal
 // Crealive 3D
 // ============================================================
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 
 import TopNav from './components/TopNav'
@@ -10,6 +10,7 @@ import BottomNav from './components/BottomNav'
 import Footer from './components/Footer'
 import WhatsAppFAB from './components/WhatsAppFAB'
 import ProtectedRoute from './components/ProtectedRoute'
+import SearchForm from './components/SearchForm'
 
 // Páginas cliente (carga diferida para rendimiento)
 const Home = lazy(() => import('./pages/Home'))
@@ -42,10 +43,23 @@ function Loading() {
     return <div className="spinner" style={{ marginTop: '80px' }} />
 }
 
+// Barra de búsqueda visible en móvil en todas las páginas.
+// Se oculta en el catálogo (que ya tiene su propio buscador) y en el panel admin.
+function MobileSearchBar() {
+    const { pathname } = useLocation()
+    if (pathname === '/catalogo' || pathname.startsWith('/admin')) return null
+    return (
+        <div className="mobile-search">
+            <SearchForm />
+        </div>
+    )
+}
+
 export default function App() {
     return (
         <>
             <TopNav />
+            <MobileSearchBar />
 
             <Suspense fallback={<Loading />}>
                 <Routes>
