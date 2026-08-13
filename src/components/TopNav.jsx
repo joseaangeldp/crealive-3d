@@ -2,11 +2,12 @@
 // src/components/TopNav.jsx — Barra superior con logo de marca
 // ============================================================
 import { useState } from 'react'
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useLocation } from 'react-router-dom'
 import { HiOutlineShoppingCart } from 'react-icons/hi'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
 import CartDrawer from './CartDrawer'
+import SearchForm from './SearchForm'
 import './TopNav.css'
 
 function CrealiveIsotipo({ size = 28, color = 'currentColor' }) {
@@ -24,6 +25,8 @@ export default function TopNav() {
     const { user, profile, isAdmin, logout } = useAuth()
     const { itemCount } = useCart()
     const [cartOpen, setCartOpen] = useState(false)
+    // El catálogo ya trae su propio buscador; evitamos duplicarlo en el nav
+    const enCatalogo = useLocation().pathname === '/catalogo'
 
     return (
         <>
@@ -43,6 +46,8 @@ export default function TopNav() {
                         {user && <li><NavLink to="/perfil">Mi cuenta</NavLink></li>}
                         {isAdmin && <li><NavLink to="/admin">Panel admin</NavLink></li>}
                     </ul>
+
+                    {!enCatalogo && <SearchForm className="searchform--nav" />}
 
                     <div className="topnav__actions">
                         <button

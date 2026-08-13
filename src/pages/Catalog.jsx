@@ -3,6 +3,7 @@
 // Incluye modal de "Diseño desde cero" con envío por WhatsApp
 // ============================================================
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { HiOutlineSearch, HiX } from 'react-icons/hi'
 import { supabase } from '../lib/supabase'
 import { CATEGORIAS as CATEGORIAS_FALLBACK, WHATSAPP_NEGOCIO, FILAMENT_COLORS } from '../config'
@@ -100,8 +101,9 @@ function CustomOrderModal({ onClose }) {
 export default function Catalog() {
     const [productos, setProductos] = useState(DEMO_PRODUCTOS)
     const [categorias, setCategorias] = useState(CATEGORIAS_FALLBACK)
+    const [searchParams] = useSearchParams()
     const [categoria, setCategoria] = useState('Todos')
-    const [busqueda, setBusqueda] = useState('')
+    const [busqueda, setBusqueda] = useState(searchParams.get('q') || '')
     const [selected, setSelected] = useState(null)
     const [customOpen, setCustomOpen] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -152,6 +154,11 @@ export default function Catalog() {
         }
         load()
     }, [])
+
+    // Sincronizar con el término que llega desde el buscador global (?q=…)
+    useEffect(() => {
+        setBusqueda(searchParams.get('q') || '')
+    }, [searchParams])
 
     const q = normalizar(busqueda.trim())
     const filtrados = productos.filter(p => {
