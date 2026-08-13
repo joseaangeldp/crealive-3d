@@ -17,6 +17,8 @@
   --color-brown:    #2C1A0E;   /* marrón chocolate (base del packaging) */
   --color-wine:     #C84B7A;   /* fucsia/rosa — acento principal */
   --color-wine-dark:#A83860;
+  --color-burgundy:     #4A1B28;  /* borgoña profundo — overlay hero + texto CTA */
+  --color-burgundy-mid: #7A2E40;  /* borgoña medio — paso intermedio del gradiente hero */
 
   /* Acentos secundarios */
   --color-orange:   #E8602C;   /* naranja del packaging */
