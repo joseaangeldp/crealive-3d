@@ -10,8 +10,9 @@
 -- Notas de diseño:
 --  · El hex viejo se lee DENTRO de la función desde filament_colors
 --    (nunca se confía del cliente, que podría tener la vista vieja).
---  · El array resultante se deduplica (evita swatches repetidos si el
---    nuevo hex ya existía en el array del producto).
+--  · El array resultante se deduplica PRESERVANDO EL ORDEN de primera
+--    aparición (evita swatches repetidos si el nuevo hex ya existía en el
+--    array del producto, sin reordenar los colores).
 --  · security definer + guard is_admin(); además capa de permisos GRANT.
 --
 -- Idempotente: create or replace. Aplicar en el SQL Editor de Supabase.
@@ -46,12 +47,19 @@ begin
        set name = p_name, hex = p_new_hex
      where id = p_id;
 
-    -- Cascada solo si el hex realmente cambió; array_agg(distinct) deduplica
+    -- Cascada solo si el hex realmente cambió. El dedup preserva el orden de
+    -- primera aparición: agrupa por valor, toma la ordinalidad mínima (primera
+    -- posición) y reordena por ella, de modo que no se reordenan los colores.
     if p_new_hex is distinct from v_old_hex then
         update public.productos
            set colores_disponibles = (
-               select array_agg(distinct h)
-               from unnest(array_replace(colores_disponibles, v_old_hex, p_new_hex)) as h
+               select array_agg(h order by ord)
+               from (
+                   select h, min(ord) as ord
+                   from unnest(array_replace(colores_disponibles, v_old_hex, p_new_hex))
+                        with ordinality as u(h, ord)
+                   group by h
+               ) s
            )
          where colores_disponibles @> array[v_old_hex];
         get diagnostics v_count = row_count;
@@ -94,6 +102,9 @@ end $$;
 -- Postgres concede EXECUTE a PUBLIC por defecto (y anon ∈ PUBLIC), así que
 -- revocar solo a anon no bastaría: revocamos a PUBLIC y a anon, y concedemos
 -- únicamente a authenticated. is_admin() es la segunda capa dentro de la función.
+-- Nota: service_role conserva EXECUTE porque Supabase se lo concede aparte del
+-- revoke a PUBLIC. No es riesgo: esa key vive solo en scripts/ locales y nunca
+-- en el frontend, e is_admin() sigue guardando por dentro.
 revoke execute on function public.admin_update_color(uuid, text, text) from public;
 revoke execute on function public.admin_update_color(uuid, text, text) from anon;
 grant  execute on function public.admin_update_color(uuid, text, text) to authenticated;
