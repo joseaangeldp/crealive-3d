@@ -57,7 +57,7 @@ begin
                from (
                    select h, min(ord) as ord
                    from unnest(array_replace(colores_disponibles, v_old_hex, p_new_hex))
-                        with ordinality as u(h, ord)
+                        with ordinality as t(h, ord)
                    group by h
                ) s
            )
@@ -102,9 +102,11 @@ end $$;
 -- Postgres concede EXECUTE a PUBLIC por defecto (y anon ∈ PUBLIC), así que
 -- revocar solo a anon no bastaría: revocamos a PUBLIC y a anon, y concedemos
 -- únicamente a authenticated. is_admin() es la segunda capa dentro de la función.
--- Nota: service_role conserva EXECUTE porque Supabase se lo concede aparte del
--- revoke a PUBLIC. No es riesgo: esa key vive solo en scripts/ locales y nunca
--- en el frontend, e is_admin() sigue guardando por dentro.
+-- Nota: al revocar EXECUTE de PUBLIC también se revocaría de service_role, pero
+-- Supabase se lo concede aparte, así que lo conserva. Verificado en la base:
+-- postgres=X, authenticated=X, service_role=X, anon NO aparece. No es riesgo:
+-- esa key vive solo en scripts/ locales, nunca en el frontend, e is_admin()
+-- sigue guardando por dentro.
 revoke execute on function public.admin_update_color(uuid, text, text) from public;
 revoke execute on function public.admin_update_color(uuid, text, text) from anon;
 grant  execute on function public.admin_update_color(uuid, text, text) to authenticated;
