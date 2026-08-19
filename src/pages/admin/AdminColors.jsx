@@ -2,15 +2,17 @@
 // src/pages/admin/AdminColors.jsx — Gestión de paleta de colores
 // Permite añadir, editar, marcar disponible/no disponible y eliminar colores
 // ============================================================
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { HiPlus, HiTrash, HiPencil, HiCheck, HiX } from 'react-icons/hi'
 import { supabase } from '../../lib/supabase'
+import { useColoresFilamento } from '../../hooks/useColoresFilamento'
 
 const EMPTY_FORM = { name: '', hex: '#A8C8E8' }
 
 export default function AdminColors() {
-    const [colors, setColors] = useState([])
-    const [loading, setLoading] = useState(true)
+    // Fuente única: el hook, con TODOS los colores (el admin ve disponibles y no)
+    const { colores: colors, loading, error: loadError, recargar: fetchColors } =
+        useColoresFilamento({ soloDisponibles: false })
     const [showForm, setShowForm] = useState(false)
     const [form, setForm] = useState(EMPTY_FORM)
     const [saving, setSaving] = useState(false)
@@ -20,14 +22,15 @@ export default function AdminColors() {
     const [editingId, setEditingId] = useState(null)
     const [editForm, setEditForm] = useState(EMPTY_FORM)
 
-    const fetchColors = async () => {
-        setLoading(true)
-        const { data } = await supabase.from('filament_colors').select('*').order('orden')
-        setColors(data || [])
-        setLoading(false)
+    // Cuántos productos tienen este hex en su lista de colores (preview de impacto)
+    const contarProductosConHex = async (hex) => {
+        const { count, error: err } = await supabase
+            .from('productos')
+            .select('id', { count: 'exact', head: true })
+            .contains('colores_disponibles', [hex])
+        if (err) throw err
+        return count || 0
     }
-
-    useEffect(() => { fetchColors() }, [])
 
     const handleAdd = async (e) => {
         e.preventDefault()
@@ -44,15 +47,29 @@ export default function AdminColors() {
     }
 
     const toggleDisponible = async (color) => {
-        await supabase.from('filament_colors').update({ disponible: !color.disponible }).eq('id', color.id)
-        setColors(prev => prev.map(c => c.id === color.id ? { ...c, disponible: !c.disponible } : c))
+        const { error: err } = await supabase.from('filament_colors')
+            .update({ disponible: !color.disponible }).eq('id', color.id)
+        if (err) { setError(`No se pudo cambiar el estado: ${err.message}`); return }
+        fetchColors()
     }
 
     const handleDelete = async (color) => {
-        if (!window.confirm(`¿Eliminar el color "${color.name}"? Esto puede afectar productos que lo usen.`)) return
-        await supabase.from('filament_colors').delete().eq('id', color.id)
-        setColors(prev => prev.filter(c => c.id !== color.id))
+        setError('')
+        let n = 0
+        try { n = await contarProductosConHex(color.hex) }
+        catch (e) { setError(`No se pudo verificar el impacto: ${e.message}`); return }
+
+        const msg = n > 0
+            ? `${n === 1 ? '1 producto tiene' : `${n} productos tienen`} este color elegido. ` +
+              `Si lo eliminás, se les quitará esa opción.\n\n¿Eliminar el color "${color.name}"?`
+            : `¿Eliminar el color "${color.name}"?`
+        if (!window.confirm(msg)) return
+
+        // admin_delete_color limpia el hex de los productos y borra la fila (atómico)
+        const { error: err } = await supabase.rpc('admin_delete_color', { p_id: color.id })
+        if (err) { setError(`Error al eliminar: ${err.message}`); return }
         setSuccess(`Color "${color.name}" eliminado.`)
+        fetchColors()
     }
 
     const startEdit = (color) => {
@@ -61,20 +78,34 @@ export default function AdminColors() {
     }
 
     const saveEdit = async (color) => {
-        if (!editForm.name.trim()) return
-        const { error: err } = await supabase
-            .from('filament_colors')
-            .update({ name: editForm.name.trim(), hex: editForm.hex })
-            .eq('id', color.id)
-        if (err) {
-            setError(`Error al guardar: ${err.message}`)
-            return
+        const nuevoNombre = editForm.name.trim()
+        if (!nuevoNombre) return
+        setError('')
+        const hexCambio = editForm.hex.toLowerCase() !== color.hex.toLowerCase()
+
+        // Preview de impacto: solo si cambia el hex Y afecta a productos.
+        // Si N = 0, guarda directo sin diálogo (pedido explícito).
+        if (hexCambio) {
+            let n = 0
+            try { n = await contarProductosConHex(color.hex) }
+            catch (e) { setError(`No se pudo verificar el impacto: ${e.message}`); return }
+            if (n > 0) {
+                const ok = window.confirm(
+                    `Este cambio de color se va a aplicar también a ${n === 1 ? '1 producto que lo tiene' : `${n} productos que lo tienen`} elegido, ` +
+                    `para que sigan mostrando el color correcto.\n\n¿Guardar el cambio?`
+                )
+                if (!ok) return
+            }
         }
-        setColors(prev => prev.map(c =>
-            c.id === color.id ? { ...c, name: editForm.name.trim(), hex: editForm.hex } : c
-        ))
+
+        // admin_update_color actualiza la fila y propaga el hex en cascada (atómico)
+        const { error: err } = await supabase.rpc('admin_update_color', {
+            p_id: color.id, p_name: nuevoNombre, p_new_hex: editForm.hex,
+        })
+        if (err) { setError(`Error al guardar: ${err.message}`); return }
         setEditingId(null)
         setSuccess('Color actualizado.')
+        fetchColors()
     }
 
     return (
@@ -86,6 +117,7 @@ export default function AdminColors() {
                 </button>
             </div>
 
+            {loadError && <div style={{ background: '#FFF5F5', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 'var(--radius-md)', padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>⚠️ No se pudieron cargar los colores. Revisá tu conexión y recargá la página.</div>}
             {error && <div style={{ background: '#FFF5F5', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 'var(--radius-md)', padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>⚠️ {error}</div>}
             {success && <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', borderRadius: 'var(--radius-md)', padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>✓ {success}</div>}
 

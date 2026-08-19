@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { HiOutlineSearch, HiX } from 'react-icons/hi'
 import { supabase } from '../lib/supabase'
-import { CATEGORIAS as CATEGORIAS_FALLBACK, WHATSAPP_NEGOCIO, FILAMENT_COLORS } from '../config'
+import { CATEGORIAS as CATEGORIAS_FALLBACK, WHATSAPP_NEGOCIO } from '../config'
 import ProductCard from '../components/ProductCard'
 import ProductCustomizer from '../components/ProductCustomizer'
+import { useColoresFilamento } from '../hooks/useColoresFilamento'
 import './Catalog.css'
 
 // Cuántas cards de la primera fila cargan eager (no lazy) por ser above-the-fold.
@@ -32,6 +33,7 @@ const EMPTY_CUSTOM = { nombre: '', descripcion: '', colores: '', referencia: '',
 
 function CustomOrderModal({ onClose }) {
     const [form, setForm] = useState(EMPTY_CUSTOM)
+    const { colores, loading: coloresLoading } = useColoresFilamento({ soloDisponibles: true })
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
     const handleSend = e => {
@@ -69,17 +71,21 @@ function CustomOrderModal({ onClose }) {
                     <div className="form-group">
                         <label className="form-label">Colores preferidos</label>
                         <input name="colores" className="form-input" placeholder="Ej: Azul pastel, blanco o rosado" value={form.colores} onChange={handleChange} />
-                        <div className="color-hint-row">
-                            {FILAMENT_COLORS.map(c => (
-                                <span
-                                    key={c.name}
-                                    title={c.name}
-                                    className="color-hint-dot"
-                                    style={{ background: c.hex }}
-                                />
-                            ))}
-                            <span className="color-hint-label">{FILAMENT_COLORS.length} colores disponibles</span>
-                        </div>
+                        {!coloresLoading && colores.length > 0 && (
+                            <div className="color-hint-row">
+                                {colores.map(c => (
+                                    <span
+                                        key={c.hex}
+                                        title={c.name}
+                                        className="color-hint-dot"
+                                        style={{ background: c.hex }}
+                                    />
+                                ))}
+                                <span className="color-hint-label">
+                                    {colores.length} {colores.length === 1 ? 'color disponible' : 'colores disponibles'}
+                                </span>
+                            </div>
+                        )}
                     </div>
                     <div className="form-group">
                         <label className="form-label">Referencia o inspiración (opcional)</label>

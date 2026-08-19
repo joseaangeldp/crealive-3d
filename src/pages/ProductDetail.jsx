@@ -2,12 +2,13 @@
 // src/pages/ProductDetail.jsx — Página de detalle de producto
 // Galería + colores (desde Supabase) + tallas + pedir por WhatsApp
 // ============================================================
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { HiChevronLeft, HiChevronRight, HiArrowLeft } from 'react-icons/hi'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
+import { useColoresFilamento, coloresDeProducto } from '../hooks/useColoresFilamento'
 import { WHATSAPP_NEGOCIO } from '../config'
 import './ProductDetail.css'
 
@@ -18,7 +19,6 @@ export default function ProductDetail() {
     const { addItem } = useCart()
 
     const [producto, setProducto] = useState(null)
-    const [colores, setColores] = useState([])
     const [edicion, setEdicion] = useState(null)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
@@ -43,26 +43,8 @@ export default function ProductDetail() {
 
             if (error || !prod) { setNotFound(true); setLoading(false); return }
             setProducto(prod)
-
-            // Cargar colores disponibles
-            const { data: globalColors } = await supabase
-                .from('filament_colors')
-                .select('*')
-                .eq('disponible', true)
-                .order('orden')
-
-            let coloresBase = []
-            const extra = Array.isArray(prod.colores_extra) ? prod.colores_extra : []
-            if (prod.colores_disponibles === null || prod.colores_disponibles === undefined) {
-                coloresBase = globalColors || []
-            } else if (Array.isArray(prod.colores_disponibles) && prod.colores_disponibles.length > 0) {
-                coloresBase = (globalColors || []).filter(c => prod.colores_disponibles.includes(c.hex))
-            }
-            const baseHexes = new Set(coloresBase.map(c => c.hex.toLowerCase()))
-            const extraFiltrados = extra.filter(c => !baseHexes.has(c.hex.toLowerCase()))
-            const todosColores = [...coloresBase, ...extraFiltrados]
-            setColores(todosColores)
-            if (todosColores.length > 0) setColorElegido(todosColores[0])
+            // Los colores salen del hook useColoresFilamento (fuente única);
+            // ver el useMemo + preselección más abajo.
 
             // Talla inicial
             if (prod.tiene_tallas && Array.isArray(prod.tallas) && prod.tallas.length > 0) {
@@ -97,7 +79,22 @@ export default function ProductDetail() {
     const prevImg = () => setImgIndex(i => (i - 1 + allImages.length) % allImages.length)
     const nextImg = () => setImgIndex(i => (i + 1) % allImages.length)
 
-    const sinColores = colores.length === 0
+    // Colores desde la tabla (misma fuente que el modal), filtrados por producto
+    const { colores: coloresGlobales, loading: coloresLoading, error: coloresError } =
+        useColoresFilamento({ soloDisponibles: true })
+    const colores = useMemo(
+        () => (producto ? coloresDeProducto(coloresGlobales, producto) : []),
+        [coloresGlobales, producto]
+    )
+    const sinColores = !coloresLoading && !coloresError && colores.length === 0
+
+    // Preseleccionar el primer color cuando cargan; nunca uno inexistente
+    useEffect(() => {
+        if (colores.length === 0) { setColorElegido(null); return }
+        setColorElegido(prev =>
+            prev && colores.some(c => c.hex === prev.hex) ? prev : colores[0]
+        )
+    }, [colores])
 
     const handleAddToCart = () => {
         addItem({
@@ -261,9 +258,19 @@ export default function ProductDetail() {
                     {/* ── SELECTOR DE COLOR ── */}
                     <div className="detail-section">
                         <label className="detail-label">Color de filamento</label>
-                        {sinColores ? (
+                        {coloresLoading ? (
+                            <div className="color-selector" aria-hidden="true">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <span key={i} className="color-swatch color-swatch--skeleton" />
+                                ))}
+                            </div>
+                        ) : coloresError ? (
+                            <p className="color-error-msg">
+                                No pudimos cargar los colores. Revisá tu conexión e intentá de nuevo.
+                            </p>
+                        ) : sinColores ? (
                             <div className="no-stock-banner">
-                                🚫 Sin stock de filamento disponible
+                                Sin stock de filamento disponible
                             </div>
                         ) : (
                             <>
