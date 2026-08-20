@@ -3,13 +3,14 @@
 // Galería de imágenes con lightbox + carrito y pedido directo
 // Colores configurables por producto + fix guardado de pedidos
 // ============================================================
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { HiX, HiChevronLeft, HiChevronRight } from 'react-icons/hi'
-import { FILAMENT_COLORS, WHATSAPP_NEGOCIO } from '../config'
+import { WHATSAPP_NEGOCIO } from '../config'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
+import { useColoresFilamento, coloresDeProducto } from '../hooks/useColoresFilamento'
 import './ProductCustomizer.css'
 
 export default function ProductCustomizer({ producto, onClose }) {
@@ -17,30 +18,15 @@ export default function ProductCustomizer({ producto, onClose }) {
     const { addItem } = useCart()
     const navigate = useNavigate()
 
-    // Determinar colores disponibles para este producto
-    const coloresDisponibles = (() => {
-        const disponibles = producto.colores_disponibles
-        const extra = Array.isArray(producto.colores_extra) ? producto.colores_extra : []
-
-        let base
-        if (Array.isArray(disponibles) && disponibles.length > 0) {
-            // Solo los colores estándar seleccionados por el admin
-            base = FILAMENT_COLORS.filter(c => disponibles.includes(c.hex))
-        } else if (disponibles === null || disponibles === undefined) {
-            // Todos los colores globales
-            base = FILAMENT_COLORS
-        } else {
-            // Array vacío → sin colores (a menos que haya extras)
-            base = []
-        }
-
-        // Mezclar con colores personalizados (evitar duplicados por hex)
-        const baseHexes = new Set(base.map(c => c.hex.toLowerCase()))
-        const extraFiltrados = extra.filter(c => !baseHexes.has(c.hex.toLowerCase()))
-        return [...base, ...extraFiltrados]
-    })()
-
-    const sinColores = coloresDisponibles.length === 0
+    // Colores desde la tabla filament_colors (fuente única), filtrados por
+    // este producto. Antes salían de un array hardcodeado → mostraba viejos.
+    const { colores: coloresGlobales, loading: coloresLoading, error: coloresError } =
+        useColoresFilamento({ soloDisponibles: true })
+    const coloresDisponibles = useMemo(
+        () => coloresDeProducto(coloresGlobales, producto),
+        [coloresGlobales, producto]
+    )
+    const sinColores = !coloresLoading && !coloresError && coloresDisponibles.length === 0
 
     // Construir array de imágenes (imagenes[] + imagen_url como fallback)
     const allImages = (() => {
@@ -52,7 +38,14 @@ export default function ProductCustomizer({ producto, onClose }) {
 
     const [imgIndex, setImgIndex] = useState(0)
     const [lightbox, setLightbox] = useState(false)
-    const [colorElegido, setColorElegido] = useState(coloresDisponibles[0] || null)
+    const [colorElegido, setColorElegido] = useState(null)
+    // Preseleccionar el primer color cuando cargan; nunca uno inexistente
+    useEffect(() => {
+        if (coloresDisponibles.length === 0) { setColorElegido(null); return }
+        setColorElegido(prev =>
+            prev && coloresDisponibles.some(c => c.hex === prev.hex) ? prev : coloresDisponibles[0]
+        )
+    }, [coloresDisponibles])
     const [tallaElegida, setTallaElegida] = useState(
         (producto.tiene_tallas && Array.isArray(producto.tallas) && producto.tallas.length > 0)
             ? producto.tallas[0]
@@ -69,7 +62,7 @@ export default function ProductCustomizer({ producto, onClose }) {
 
     // ── AGREGAR AL CARRITO ──
     const handleAgregarCarrito = () => {
-        if (sinColores) return
+        if (sinColores || !colorElegido) return
         addItem({ producto, color: colorElegido, cantidad, mensaje })
         setToast(true)
         setTimeout(() => { setToast(false); onClose() }, 1200)
@@ -77,7 +70,7 @@ export default function ProductCustomizer({ producto, onClose }) {
 
     // ── ENVIAR PEDIDO DIRECTO ──
     const handleEnviarDirecto = async () => {
-        if (sinColores) return
+        if (sinColores || !colorElegido) return
         setError('')
         setEnviando(true)
         try {
@@ -197,7 +190,19 @@ export default function ProductCustomizer({ producto, onClose }) {
                 <div className="customizer-section">
                     <label className="form-label">Color de filamento</label>
 
-                    {sinColores ? (
+                    {coloresLoading ? (
+                        /* ── Cargando colores ── */
+                        <div className="color-grid" aria-hidden="true">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <span key={i} className="color-dot color-dot--skeleton" />
+                            ))}
+                        </div>
+                    ) : coloresError ? (
+                        /* ── Error al cargar ── */
+                        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', padding: '10px 0' }}>
+                            No pudimos cargar los colores. Revisá tu conexión e intentá de nuevo.
+                        </p>
+                    ) : sinColores ? (
                         /* ── Sin colores disponibles ── */
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 10,
