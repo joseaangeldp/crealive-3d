@@ -19,15 +19,6 @@ const ABOVE_THE_FOLD = 4
 // Normaliza para buscar sin distinguir acentos ni mayúsculas
 const normalizar = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-// Productos de demo (se usan si Supabase no está configurado)
-const DEMO_PRODUCTOS = [
-    { id: '1', nombre: 'Organizador Modular', categoria: 'Porta objetos / Organizadores', descripcion: 'Perfecto para escritorios y mesas de trabajo', precio: 12.99, imagen_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80', activo: true },
-    { id: '2', nombre: 'Maceta Geométrica', categoria: 'Macetas / Decoración hogar', descripcion: 'Diseño minimalista para plantas pequeñas', precio: 9.99, imagen_url: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=80', activo: true },
-    { id: '3', nombre: 'Llavero Personalizado', categoria: 'Llaveros / Accesorios', descripcion: 'Con tu nombre o iniciales', precio: 5.99, imagen_url: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=400&q=80', activo: true },
-    { id: '4', nombre: 'Retrato en Relieve', categoria: 'Retratos personalizados', descripcion: 'Tu foto convertida en escultura 3D', precio: 24.99, imagen_url: 'https://images.unsplash.com/photo-1609770231080-e321deccc34c?w=400&q=80', activo: true },
-    { id: '5', nombre: 'Porta Celular', categoria: 'Porta objetos / Organizadores', descripcion: 'Soporte elegante para tu escritorio', precio: 8.99, imagen_url: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=400&q=80', activo: true },
-    { id: '6', nombre: 'Maceta Colgante', categoria: 'Macetas / Decoración hogar', descripcion: 'Con sistema de colgado incluido', precio: 11.99, imagen_url: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=400&q=80', activo: true },
-]
 
 const EMPTY_CUSTOM = { nombre: '', descripcion: '', colores: '', referencia: '', cantidad: '1' }
 
@@ -105,7 +96,7 @@ function CustomOrderModal({ onClose }) {
 }
 
 export default function Catalog() {
-    const [productos, setProductos] = useState(DEMO_PRODUCTOS)
+    const [productos, setProductos] = useState([])
     const [categorias, setCategorias] = useState(CATEGORIAS_FALLBACK)
     const [searchParams] = useSearchParams()
     const [categoria, setCategoria] = useState('Todos')

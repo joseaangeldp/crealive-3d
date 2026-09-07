@@ -1,37 +1,36 @@
 // ============================================================
 // src/pages/Gallery.jsx — Galería de trabajos terminados
+// Sin datos mock: carga real desde Supabase con estados propios.
 // ============================================================
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { onImgError } from '../lib/imgFallback'
 import { CATEGORIAS } from '../config'
 import './Gallery.css'
 
-const DEMO_GALLERY = [
-    { id: 1, titulo: 'Organizador de escritorio', categoria: 'Porta objetos / Organizadores', descripcion: 'Para un cliente en Buenos Aires — filamento azul pastel', imagen_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80' },
-    { id: 2, titulo: 'Maceta colgante geométrica', categoria: 'Macetas / Decoración hogar', descripcion: 'Diseño a medida en color verde menta', imagen_url: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80' },
-    { id: 3, titulo: 'Llaveros personalizados x5', categoria: 'Llaveros / Accesorios', descripcion: 'Nombres en relieve, colores variados', imagen_url: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=600&q=80' },
-    { id: 4, titulo: 'Retrato familiar en 3D', categoria: 'Retratos personalizados', descripcion: 'Regalo de cumpleaños — tres figuras en relieve', imagen_url: 'https://images.unsplash.com/photo-1609770231080-e321deccc34c?w=600&q=80' },
-    { id: 5, titulo: 'Porta celular minimalista', categoria: 'Porta objetos / Organizadores', descripcion: 'Color negro sólido para escritorio', imagen_url: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600&q=80' },
-    { id: 6, titulo: 'Maceta con drenaje', categoria: 'Macetas / Decoración hogar', descripcion: 'Diseño personalizado con sistema de drenaje incluido', imagen_url: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&q=80' },
-    { id: 7, titulo: 'Set de llaveros graduación', categoria: 'Llaveros / Accesorios', descripcion: 'Pedido de 20 unidades para regalo de egresados', imagen_url: 'https://images.unsplash.com/photo-1583394293253-4f6413b41d1e?w=600&q=80' },
-    { id: 8, titulo: 'Organizador modular apilable', categoria: 'Porta objetos / Organizadores', descripcion: 'Sistema de 4 módulos en color rosado', imagen_url: 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=600&q=80' },
-]
-
 export default function Gallery() {
-    const [items, setItems] = useState(DEMO_GALLERY)
+    const [items, setItems] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(false)
     const [categoria, setCategoria] = useState('Todos')
     const [lightbox, setLightbox] = useState(null)
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const { data, error } = await supabase.from('galeria').select('*').order('orden')
-                if (!error && data && data.length > 0) setItems(data)
-            } catch (_) { /* usa demo */ }
+    const cargar = useCallback(async () => {
+        setLoading(true)
+        setError(false)
+        try {
+            const { data, error: err } = await supabase.from('galeria').select('*').order('orden')
+            if (err) throw err
+            setItems(data || [])
+        } catch (_) {
+            setError(true)
+        } finally {
+            setLoading(false)
         }
-        load()
     }, [])
+
+    useEffect(() => { cargar() }, [cargar])
 
     const filtrados = categoria === 'Todos'
         ? items
@@ -47,49 +46,77 @@ export default function Gallery() {
             </div>
 
             <div className="container section">
-                {/* Filtros */}
-                <div className="category-filters">
-                    {CATEGORIAS.map(cat => (
-                        <button
-                            key={cat}
-                            className={'cat-btn' + (categoria === cat ? ' active' : '')}
-                            onClick={() => setCategoria(cat)}
-                        >
-                            {cat}
-                        </button>
-                    ))}
-                </div>
+                {/* Filtros (ocultos mientras hay error) */}
+                {!error && (
+                    <div className="category-filters">
+                        {CATEGORIAS.map(cat => (
+                            <button
+                                key={cat}
+                                className={'cat-btn' + (categoria === cat ? ' active' : '')}
+                                onClick={() => setCategoria(cat)}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
-                {/* Grid masonry */}
-                <div className="gallery-grid">
-                    {filtrados.map(item => (
-                        <div
-                            key={item.id}
-                            className="gallery-card"
-                            onClick={() => setLightbox(item)}
-                        >
-                            <img
-                                src={item.imagen_url}
-                                alt={item.titulo}
-                                className="gallery-img"
-                                loading="lazy"
-                                decoding="async"
-                                width="800"
-                                height="600"
-                            />
-                            <div className="gallery-info">
-                                <span className="gallery-cat">{item.categoria}</span>
-                                <h3>{item.titulo}</h3>
-                                <p>{item.descripcion}</p>
+                {loading ? (
+                    /* ── Cargando: skeletons con la forma de las tarjetas ── */
+                    <div className="gallery-grid">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="gallery-card gallery-card--skeleton">
+                                <div className="gallery-img gallery-img--skeleton" />
+                                <div className="gallery-info">
+                                    <span className="gallery-skel-line gallery-skel-line--sm" />
+                                    <span className="gallery-skel-line" />
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-
-                {filtrados.length === 0 && (
-                    <div className="empty-state">
-                        <div className="icon">📷</div>
-                        <h3>No hay trabajos en esta categoría aún</h3>
+                        ))}
+                    </div>
+                ) : error ? (
+                    /* ── Error / sin conexión ── */
+                    <div className="gallery-state">
+                        <h3>No pudimos cargar la galería</h3>
+                        <p>Revisá tu conexión e intentá de nuevo.</p>
+                        <button className="btn btn-primary" onClick={cargar}>Reintentar</button>
+                    </div>
+                ) : filtrados.length === 0 ? (
+                    /* ── Vacío (query OK, sin resultados) ── */
+                    <div className="gallery-state">
+                        <h3>
+                            {categoria === 'Todos'
+                                ? 'Todavía no hay piezas en la galería'
+                                : 'No hay piezas en esta categoría todavía'}
+                        </h3>
+                        <p>Muy pronto vas a ver acá nuestros trabajos terminados.</p>
+                    </div>
+                ) : (
+                    /* ── Grid con piezas reales ── */
+                    <div className="gallery-grid">
+                        {filtrados.map(item => (
+                            <div
+                                key={item.id}
+                                className="gallery-card"
+                                onClick={() => setLightbox(item)}
+                            >
+                                <img
+                                    src={item.imagen_url}
+                                    alt={item.titulo}
+                                    className="gallery-img"
+                                    loading="lazy"
+                                    decoding="async"
+                                    width="800"
+                                    height="600"
+                                    onError={onImgError}
+                                />
+                                <div className="gallery-info">
+                                    <span className="gallery-cat">{item.categoria}</span>
+                                    <h3>{item.titulo}</h3>
+                                    <p>{item.descripcion}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
@@ -113,7 +140,7 @@ export default function Gallery() {
                     <div className="overlay" onClick={() => setLightbox(null)} style={{ zIndex: 500 }} />
                     <div className="lightbox" style={{ zIndex: 501 }}>
                         <button className="modal-close" onClick={() => setLightbox(null)} aria-label="Cerrar">✕</button>
-                        <img src={lightbox.imagen_url} alt={lightbox.titulo} className="lightbox-img" decoding="async" />
+                        <img src={lightbox.imagen_url} alt={lightbox.titulo} className="lightbox-img" decoding="async" onError={onImgError} />
                         <div className="lightbox-info">
                             <span className="gallery-cat">{lightbox.categoria}</span>
                             <h2>{lightbox.titulo}</h2>
