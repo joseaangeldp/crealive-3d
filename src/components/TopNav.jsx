@@ -10,17 +10,6 @@ import CartDrawer from './CartDrawer'
 import SearchForm from './SearchForm'
 import './TopNav.css'
 
-function CrealiveIsotipo({ size = 28, color = 'currentColor' }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 60 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            {/* C exterior: top arm + left column + bottom arm con curva */}
-            <path d="M6 0 H52 V22 H20 V42 H52 V64 H6 Q0 64 0 58 V6 Q0 0 6 0 Z" fill={color} />
-            {/* Notch interior (diente superior derecho del C) */}
-            <rect x="34" y="22" width="18" height="20" rx="2" fill={color} />
-        </svg>
-    )
-}
-
 export default function TopNav() {
     const { user, profile, isAdmin, logout } = useAuth()
     const { itemCount } = useCart()
@@ -33,7 +22,7 @@ export default function TopNav() {
             <nav className="topnav">
                 <div className="topnav__inner">
                     <Link to="/" className="topnav__logo">
-                        <CrealiveIsotipo size={28} color="var(--color-wine)" />
+                        <img src="/logo.png" alt="Crealive 3D" className="topnav__logo-img" width="30" height="30" />
                         <span className="topnav__logo-word">
                             crealive<em>3D</em>
                         </span>

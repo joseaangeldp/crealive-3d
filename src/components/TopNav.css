@@ -39,6 +39,13 @@
     flex-shrink: 0;
 }
 
+.topnav__logo-img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+}
+
 .topnav__logo-word {
     font-family: var(--font-display);
     font-size: 20px;
