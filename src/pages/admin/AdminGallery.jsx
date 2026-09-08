@@ -10,6 +10,7 @@ import {
 import { supabase } from '../../lib/supabase'
 import { compressProductImage } from '../../lib/compressProductImage'
 import { CATEGORIAS } from '../../config'
+import '../Gallery.css'   // reutiliza el visor (lightbox) que muestra la imagen completa
 
 const BUCKET = 'galeria'
 
@@ -484,6 +485,14 @@ export default function AdminGallery() {
                             <span className="gallery-cat">{preview.categoria}</span>
                             <h2>{preview.titulo}</h2>
                             <p>{preview.descripcion}</p>
+                            <a
+                                className="lightbox-original"
+                                href={preview.imagen_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Ver imagen original ↗
+                            </a>
                         </div>
                     </div>
                 </>

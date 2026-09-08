@@ -145,6 +145,14 @@ export default function Gallery() {
                             <span className="gallery-cat">{lightbox.categoria}</span>
                             <h2>{lightbox.titulo}</h2>
                             <p>{lightbox.descripcion}</p>
+                            <a
+                                className="lightbox-original"
+                                href={lightbox.imagen_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Ver imagen original ↗
+                            </a>
                         </div>
                     </div>
                 </>
