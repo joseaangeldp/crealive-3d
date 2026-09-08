@@ -15,7 +15,7 @@
     align-items: center;
     justify-content: space-around;
     z-index: 300;
-    padding: 0 8px;
+    padding: 0 4px;
     /* Solo en móvil */
 }
 
@@ -30,14 +30,16 @@
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    padding: 8px 16px;
+    padding: 8px 4px;
     border-radius: var(--radius-md);
     color: var(--color-text-muted);
     font-size: 11px;
     font-weight: 500;
-    transition: all var(--transition);
-    flex: 1;
+    transition: color var(--transition), background var(--transition);
+    flex: 1 1 0;
+    min-width: 0;              /* permite que los 5 ítems se encojan y quepan */
     text-align: center;
+    white-space: nowrap;
 }
 
 .bottom-nav__item svg {

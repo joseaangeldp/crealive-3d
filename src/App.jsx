@@ -11,6 +11,7 @@ import Footer from './components/Footer'
 import WhatsAppFAB from './components/WhatsAppFAB'
 import ProtectedRoute from './components/ProtectedRoute'
 import SearchForm from './components/SearchForm'
+import ScrollToTop from './components/ScrollToTop'
 
 // Páginas cliente (carga diferida para rendimiento)
 const Home = lazy(() => import('./pages/Home'))
@@ -58,6 +59,7 @@ function MobileSearchBar() {
 export default function App() {
     return (
         <>
+            <ScrollToTop />
             <TopNav />
             <MobileSearchBar />
 

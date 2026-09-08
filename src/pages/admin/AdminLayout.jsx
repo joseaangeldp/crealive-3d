@@ -85,10 +85,7 @@ export default function AdminLayout() {
             {/* Sidebar */}
             <aside className={`admin-sidebar${sidebarOpen ? ' open' : ''}`}>
                 <div className="admin-sidebar__logo">
-                    <svg width="26" height="26" viewBox="0 0 60 64" fill="none" aria-hidden="true">
-                        <path d="M6 0 H52 V22 H20 V42 H52 V64 H6 Q0 64 0 58 V6 Q0 0 6 0 Z" fill="var(--color-wine)" />
-                        <rect x="34" y="22" width="18" height="20" rx="2" fill="var(--color-wine)" />
-                    </svg>
+                    <img src="/logo.png" alt="Crealive 3D" width="26" height="26" style={{ objectFit: 'contain' }} />
                     <div>
                         <div className="admin-sidebar__logo-text">crealive</div>
                         <span className="admin-sidebar__logo-sub">Admin Panel</span>
