@@ -8,26 +8,15 @@ import ProductCard from '../components/ProductCard'
 import ProductCustomizer from '../components/ProductCustomizer'
 import HeroParticles from '../components/HeroParticles'
 import { useScrollReveal } from '../hooks/useScrollReveal'
+import { onImgError } from '../lib/imgFallback'
 import './Home.css'
 
-// ── Demo data ────────────────────────────────────────────────
-const DEMO_COLECCIONES = [
-    { id: '1', titulo: 'Colección Primavera', descripcion: 'Macetas y organizadores llenos de color para decorar tu hogar', imagen_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80' },
-    { id: '2', titulo: 'Llaveros Personalizados', descripcion: 'Tu nombre, tus colores — piezas únicas para regalar', imagen_url: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=800&q=80' },
-    { id: '3', titulo: 'Retratos en 3D', descripcion: 'Convertimos tus fotos en esculturas únicas impresas en 3D', imagen_url: 'https://images.unsplash.com/photo-1609770231080-e321deccc34c?w=800&q=80' },
-]
-
-const DEMO_MAS_VENDIDOS = [
-    { id: '1', nombre: 'Organizador Modular', categoria: 'Porta objetos', descripcion: 'Perfecto para escritorios y mesas de trabajo', precio: 12.99, imagen_url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80', activo: true },
-    { id: '3', nombre: 'Llavero Personalizado', categoria: 'Llaveros / Accesorios', descripcion: 'Con tu nombre o iniciales', precio: 5.99, imagen_url: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=400&q=80', activo: true },
-    { id: '4', nombre: 'Retrato en Relieve', categoria: 'Retratos personalizados', descripcion: 'Tu foto convertida en escultura 3D', precio: 24.99, imagen_url: 'https://images.unsplash.com/photo-1609770231080-e321deccc34c?w=400&q=80', activo: true },
-    { id: '2', nombre: 'Maceta Geométrica', categoria: 'Macetas / Decoración hogar', descripcion: 'Diseño minimalista para plantas pequeñas', precio: 9.99, imagen_url: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=80', activo: true },
-]
-
 export default function Home() {
-    const [colecciones, setColecciones]   = useState(DEMO_COLECCIONES)
+    const [colecciones, setColecciones]   = useState([])
+    const [coleccionesLoading, setColeccionesLoading] = useState(true)
     const [activeSlide, setActiveSlide]   = useState(0)
-    const [masVendidos, setMasVendidos]   = useState(DEMO_MAS_VENDIDOS)
+    const [masVendidos, setMasVendidos]   = useState([])
+    const [masVendidosLoading, setMasVendidosLoading] = useState(true)
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [isOffline, setIsOffline]       = useState(false)
     const heroRef = useRef(null)
@@ -53,13 +42,16 @@ export default function Home() {
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
-    // ── Cargar colecciones ───────────────────────────────────
+    // ── Cargar colecciones (banner) ──────────────────────────
     useEffect(() => {
         const load = async () => {
             try {
                 const { data, error } = await supabase.from('colecciones').select('*').eq('activo', true).order('orden')
-                if (!error && data && data.length > 0) setColecciones(data)
-            } catch (_) {}
+                if (!error && data) setColecciones(data)
+            } catch (_) {
+            } finally {
+                setColeccionesLoading(false)
+            }
         }
         load()
     }, [])
@@ -69,15 +61,20 @@ export default function Home() {
         const load = async () => {
             try {
                 const { data, error } = await supabase.from('productos').select('*').eq('activo', true).limit(4)
-                if (!error && data && data.length > 0) setMasVendidos(data)
-                else if (error) setIsOffline(true)
-            } catch (_) { setIsOffline(true) }
+                if (error) throw error
+                setMasVendidos(data || [])
+            } catch (_) {
+                setIsOffline(true)
+            } finally {
+                setMasVendidosLoading(false)
+            }
         }
         load()
     }, [])
 
-    // ── Auto-avance del carrusel ─────────────────────────────
+    // ── Auto-avance del carrusel (solo con 2+ colecciones) ───
     useEffect(() => {
+        if (colecciones.length <= 1) return
         const t = setInterval(() => setActiveSlide(s => (s + 1) % colecciones.length), 4500)
         return () => clearInterval(t)
     }, [colecciones.length])
@@ -87,34 +84,64 @@ export default function Home() {
             {/* ── Hero carousel ── */}
             <section className="hero-carousel" ref={heroRef}>
                 <HeroParticles />
-                <div className="carousel-track" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
-                    {colecciones.map((col, i) => (
-                        <div key={col.id} className="carousel-slide">
-                            <img
-                                src={col.imagen_url}
-                                alt={col.titulo}
-                                className="carousel-img"
-                                loading={i === 0 ? 'eager' : 'lazy'}
-                                fetchpriority={i === 0 ? 'high' : 'auto'}
-                                decoding="async"
-                            />
+
+                {coleccionesLoading ? (
+                    /* ── Cargando: hero con shimmer, sin contenido falso ── */
+                    <div className="carousel-track">
+                        <div className="carousel-slide">
+                            <div className="hero-skeleton" />
+                        </div>
+                    </div>
+                ) : colecciones.length > 0 ? (
+                    /* ── Colecciones reales ── */
+                    <>
+                        <div className="carousel-track" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
+                            {colecciones.map((col, i) => (
+                                <div key={col.id} className="carousel-slide">
+                                    <img
+                                        src={col.imagen_url}
+                                        alt={col.titulo}
+                                        className="carousel-img"
+                                        loading={i === 0 ? 'eager' : 'lazy'}
+                                        fetchpriority={i === 0 ? 'high' : 'auto'}
+                                        decoding="async"
+                                        onError={onImgError}
+                                    />
+                                    <div className="carousel-overlay">
+                                        <div className="carousel-content hero-fadein">
+                                            <span className="carousel-label">Novedades</span>
+                                            <h2 className="carousel-title">{col.titulo}</h2>
+                                            <p className="carousel-desc">{col.descripcion}</p>
+                                            <Link to={`/coleccion/${col.id}`} className="btn btn-ghost">Ver colección →</Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {colecciones.length > 1 && (
+                            <div className="carousel-dots">
+                                {colecciones.map((_, i) => (
+                                    <button key={i} className={'carousel-dot' + (i === activeSlide ? ' active' : '')}
+                                        onClick={() => setActiveSlide(i)} aria-label={`Ir a slide ${i + 1}`} />
+                                ))}
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    /* ── Sin colecciones: hero de marca sobrio (nada de stock) ── */
+                    <div className="carousel-track">
+                        <div className="carousel-slide hero-fallback">
                             <div className="carousel-overlay">
                                 <div className="carousel-content hero-fadein">
-                                    <span className="carousel-label">Novedades</span>
-                                    <h2 className="carousel-title">{col.titulo}</h2>
-                                    <p className="carousel-desc">{col.descripcion}</p>
-                                    <Link to={`/coleccion/${col.id}`} className="btn btn-ghost">Ver colección →</Link>
+                                    <span className="carousel-label">Crealive 3D</span>
+                                    <h2 className="carousel-title">Piezas 3D hechas para vos</h2>
+                                    <p className="carousel-desc">Explorá el catálogo y personalizá tu pieza a tu gusto.</p>
+                                    <Link to="/catalogo" className="btn btn-ghost">Ver catálogo →</Link>
                                 </div>
                             </div>
                         </div>
-                    ))}
-                </div>
-                <div className="carousel-dots">
-                    {colecciones.map((_, i) => (
-                        <button key={i} className={'carousel-dot' + (i === activeSlide ? ' active' : '')}
-                            onClick={() => setActiveSlide(i)} aria-label={`Ir a slide ${i + 1}`} />
-                    ))}
-                </div>
+                    </div>
+                )}
             </section>
 
             {/* ── ¿Cómo funciona? ── */}
@@ -174,7 +201,8 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ── Más Vendidos ── */}
+            {/* ── Más Vendidos (se oculta si no hay productos) ── */}
+            {(masVendidosLoading || masVendidos.length > 0) && (
             <section className="section mas-vendidos">
                 <div className="container">
                     <div className="mas-vendidos__header">
@@ -191,19 +219,32 @@ export default function Home() {
                     </div>
 
                     <div className="mas-vendidos__grid">
-                        {masVendidos.map((producto, idx) => (
-                            <div key={producto.id} className="mas-vendidos__item reveal" data-delay={idx * 160}>
-                                {idx === 0 && <span className="badge-top">⭐ N°1</span>}
-                                <ProductCard
-                                    producto={producto}
-                                    onPersonalizar={() => setSelectedProduct(producto)}
-                                    offline={isOffline}
-                                />
-                            </div>
-                        ))}
+                        {masVendidosLoading
+                            ? Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="mas-vendidos__item">
+                                    <div className="card producto-skeleton">
+                                        <div className="producto-skeleton__img" />
+                                        <div className="producto-skeleton__body">
+                                            <span className="producto-skeleton__line" />
+                                            <span className="producto-skeleton__line producto-skeleton__line--sm" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                            : masVendidos.map((producto, idx) => (
+                                <div key={producto.id} className="mas-vendidos__item reveal" data-delay={idx * 160}>
+                                    {idx === 0 && <span className="badge-top">⭐ N°1</span>}
+                                    <ProductCard
+                                        producto={producto}
+                                        onPersonalizar={() => setSelectedProduct(producto)}
+                                        offline={isOffline}
+                                    />
+                                </div>
+                            ))}
                     </div>
                 </div>
             </section>
+            )}
 
             {/* Modal personalizador desde Home */}
             {selectedProduct && (

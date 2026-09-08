@@ -3,6 +3,7 @@
 // Soporta modo offline: muestra ícono de categoría sin imagen
 // ============================================================
 import { Link } from 'react-router-dom'
+import { onImgError } from '../lib/imgFallback'
 import './ProductCard.css'
 
 // Íconos SVG por categoría
@@ -64,6 +65,7 @@ export default function ProductCard({ producto, onPersonalizar, edicionActiva, o
                         decoding="async"
                         width="800"
                         height="600"
+                        onError={onImgError}
                     />
                 )}
                 <span className="product-card__cat">{producto.categoria}</span>
