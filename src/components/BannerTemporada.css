@@ -1,0 +1,214 @@
+/* ============================================================
+   src/components/BannerTemporada.css
+   Notificación temática de temporada — paleta crema y vino.
+   Colores tomados de las CSS custom properties de index.css.
+   Animaciones en CSS puro (sin librerías, sin imágenes ni video).
+   ============================================================ */
+
+.banner-temporada {
+    position: fixed;
+    bottom: 28px;
+    right: 24px;
+    z-index: 400;              /* sobre contenido y bottom-nav (300); bajo el FAB (500) */
+    max-width: 340px;
+    animation: bt-entrada 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes bt-entrada {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Tarjeta clicable (todo el cuerpo navega a la colección) ── */
+.banner-temporada__card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 46px 14px 16px;   /* margen derecho para el botón cerrar */
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-burgundy);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-body);
+    color: var(--color-burgundy);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.banner-temporada__card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(74, 27, 40, 0.22);
+}
+
+.banner-temporada__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.banner-temporada__titulo {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.2;
+    color: var(--color-burgundy);
+}
+.banner-temporada__desc {
+    font-size: 12.5px;
+    color: var(--color-text-muted);
+    line-height: 1.25;
+}
+.banner-temporada__cta {
+    margin-top: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-wine-dark);
+}
+
+/* ── Botón cerrar — grande y claro ── */
+.banner-temporada__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-2);
+    color: var(--color-burgundy);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.banner-temporada__close:hover {
+    background: var(--color-burgundy);
+    color: #fff;
+}
+
+/* ── Contenedor de animación (tamaño fijo, no crece) ── */
+.banner-temporada__anim { flex: 0 0 auto; }
+.bt-anim {
+    position: relative;
+    display: block;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+}
+
+/* ============================================================
+   ANIMACIÓN — BÉISBOL: bate golpeando la pelota, en bucle suave.
+   ============================================================ */
+.bt-anim--beisbol .bt-bate {
+    position: absolute;
+    left: 21px;
+    bottom: 5px;
+    width: 6px;
+    height: 30px;
+    border-radius: 3px;
+    /* mango vino → madera clara */
+    background: linear-gradient(to top, var(--color-burgundy-mid) 0%, #C88A5A 40%, #E8C9A0 100%);
+    transform-origin: 50% 100%;
+    transform: rotate(-55deg);
+    animation: bt-swing 1.6s ease-in-out infinite;
+}
+.bt-anim--beisbol .bt-pelota {
+    position: absolute;
+    left: 6px;
+    bottom: 11px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #F0E9DD 70%, #D8CDB8 100%);
+    box-shadow: inset -1px -1px 2px rgba(0, 0, 0, 0.15);
+    animation: bt-hit 1.6s ease-in-out infinite;
+}
+
+/* El bate espera, golpea en el contacto (~45%) y vuelve al reposo. */
+@keyframes bt-swing {
+    0%, 30% { transform: rotate(-55deg); }
+    45%     { transform: rotate(40deg); }   /* contacto */
+    60%     { transform: rotate(25deg); }   /* follow-through */
+    100%    { transform: rotate(-55deg); }
+}
+
+/* La pelota "llega" al plato, es golpeada en el contacto y sale volando. */
+@keyframes bt-hit {
+    0%   { transform: translate(-4px, 2px) scale(0.7); opacity: 0; }
+    8%   { transform: translate(0, 0) scale(1); opacity: 1; }        /* llega al plato */
+    42%  { transform: translate(0, 0) scale(1); opacity: 1; }        /* espera */
+    50%  { transform: translate(4px, -2px) scale(1.05); opacity: 1; } /* impacto */
+    74%  { transform: translate(22px, -16px) scale(0.7); opacity: 1; }
+    88%  { transform: translate(34px, -6px) scale(0.35); opacity: 0; } /* sale volando */
+    100% { transform: translate(-4px, 2px) scale(0.7); opacity: 0; }   /* reposo, oculta */
+}
+
+/* ============================================================
+   ANIMACIÓN — NAVIDAD: copo de nieve (estructura lista).
+   ============================================================ */
+.bt-anim--navidad .bt-copo {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: var(--color-blue);
+    animation: bt-copo 3s linear infinite;
+}
+@keyframes bt-copo {
+    0%   { transform: translateY(-4px) rotate(0deg); }
+    50%  { transform: translateY(4px) rotate(180deg); }
+    100% { transform: translateY(-4px) rotate(360deg); }
+}
+
+/* ============================================================
+   ANIMACIÓN — HALLOWEEN: calabaza (estructura lista).
+   ============================================================ */
+.bt-anim--halloween .bt-calabaza {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    animation: bt-calabaza 1.4s ease-in-out infinite;
+}
+@keyframes bt-calabaza {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-3px) scale(1.08); }
+}
+
+/* ============================================================
+   RESPONSIVE — móvil: no tapar navegación ni el FAB.
+   El bottom-nav mide --bottom-nav-h (68px); el FAB de WhatsApp
+   está abajo-izquierda, así que dejamos libre ese lado.
+   ============================================================ */
+@media (max-width: 768px) {
+    .banner-temporada {
+        bottom: calc(var(--bottom-nav-h) + 12px);
+        right: 12px;
+        left: 84px;            /* deja libre el FAB (abajo-izquierda) */
+        max-width: none;
+    }
+}
+
+/* ============================================================
+   prefers-reduced-motion: se muestra igual, pero SIN animación.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .banner-temporada,
+    .banner-temporada__card,
+    .bt-anim--beisbol .bt-bate,
+    .bt-anim--beisbol .bt-pelota,
+    .bt-anim--navidad .bt-copo,
+    .bt-anim--halloween .bt-calabaza {
+        animation: none !important;
+    }
+    /* Estado estático legible: pelota en el plato, bate en reposo. */
+    .banner-temporada { opacity: 1; transform: none; }
+    .bt-anim--beisbol .bt-pelota { opacity: 1; transform: none; }
+    .bt-anim--beisbol .bt-bate { transform: rotate(-42deg); }
+}
