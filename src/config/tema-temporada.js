@@ -9,7 +9,9 @@
 export const temaTemporada = {
     // ── Interruptor maestro ──────────────────────────────────
     // false = la notificación no se monta en ninguna parte.
-    activo: true,
+    // Apagada temporalmente: reactivar (activo: true) una vez verificado
+    // que la colección de `coleccionId` existe y está activa en la base.
+    activo: false,
 
     // Identificador del tema. Se usa para la clave de localStorage
     // (`crealive_promo_<tema>`), de modo que quien cierre la de
