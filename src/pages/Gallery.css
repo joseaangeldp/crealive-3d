@@ -80,58 +80,55 @@
     color: var(--color-text-muted);
 }
 
-/* Lightbox */
-.lightbox {
+/* ─── Visor de imagen — solo la imagen, centrada sobre fondo oscuro ─── */
+.lightbox-overlay {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--color-white);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    width: auto;
-    max-width: 94vw;
-    max-height: 94vh;
+    inset: 0;
+    z-index: 500;
     display: flex;
-    flex-direction: column;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
-    animation: modalIn 0.25s ease;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(20, 12, 8, 0.85);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s ease;
+    cursor: zoom-out;
 }
 
-/* Imagen COMPLETA (sin recortar), lo más grande que entre en la pantalla */
+/* La imagen: completa (sin recortar), lo más grande que entre en pantalla */
 .lightbox-img {
     display: block;
     width: auto;
     height: auto;
-    max-width: 94vw;
-    max-height: 80vh;
+    max-width: 96vw;
+    max-height: 92vh;
     object-fit: contain;
-    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    cursor: default;
 }
 
-.lightbox-info {
-    padding: 20px 24px 24px;
-    flex-shrink: 0;
-}
-
-.lightbox-original {
-    display: inline-block;
-    margin-top: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-wine);
-}
-.lightbox-original:hover { text-decoration: underline; }
-
-.lightbox-info h2 {
+.lightbox-close {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 501;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
     font-size: 20px;
-    margin: 8px 0 6px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease;
 }
-
-.lightbox-info p {
-    font-size: 14px;
-    color: var(--color-text-muted);
-}
+.lightbox-close:hover { background: rgba(255, 255, 255, 0.3); }
 
 @media (max-width: 480px) {
     .gallery-grid {

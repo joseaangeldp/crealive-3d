@@ -32,6 +32,18 @@ export default function Gallery() {
 
     useEffect(() => { cargar() }, [cargar])
 
+    // Visor abierto: cerrar con Escape y bloquear el scroll del fondo.
+    useEffect(() => {
+        if (!lightbox) return
+        const onKey = (e) => { if (e.key === 'Escape') setLightbox(null) }
+        window.addEventListener('keydown', onKey)
+        document.body.style.overflow = 'hidden'
+        return () => {
+            window.removeEventListener('keydown', onKey)
+            document.body.style.overflow = ''
+        }
+    }, [lightbox])
+
     const filtrados = categoria === 'Todos'
         ? items
         : items.filter(i => i.categoria === categoria)
@@ -134,28 +146,25 @@ export default function Gallery() {
                 </div>
             </div>
 
-            {/* Lightbox */}
+            {/* Visor — solo la imagen, sin tarjeta ni panel de info */}
             {lightbox && (
-                <>
-                    <div className="overlay" onClick={() => setLightbox(null)} style={{ zIndex: 500 }} />
-                    <div className="lightbox" style={{ zIndex: 501 }}>
-                        <button className="modal-close" onClick={() => setLightbox(null)} aria-label="Cerrar">✕</button>
-                        <img src={lightbox.imagen_url} alt={lightbox.titulo} className="lightbox-img" decoding="async" onError={onImgError} />
-                        <div className="lightbox-info">
-                            <span className="gallery-cat">{lightbox.categoria}</span>
-                            <h2>{lightbox.titulo}</h2>
-                            <p>{lightbox.descripcion}</p>
-                            <a
-                                className="lightbox-original"
-                                href={lightbox.imagen_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Ver imagen original ↗
-                            </a>
-                        </div>
-                    </div>
-                </>
+                <div
+                    className="lightbox-overlay"
+                    onClick={() => setLightbox(null)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={lightbox.titulo}
+                >
+                    <button className="lightbox-close" onClick={() => setLightbox(null)} aria-label="Cerrar">✕</button>
+                    <img
+                        src={lightbox.imagen_url}
+                        alt={lightbox.titulo}
+                        className="lightbox-img"
+                        decoding="async"
+                        onError={onImgError}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
             )}
         </main>
     )
