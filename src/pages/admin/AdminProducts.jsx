@@ -31,6 +31,8 @@ export default function AdminProducts() {
     const [saving, setSaving] = useState(false)
     const [saveError, setSaveError] = useState('')
     const [uploading, setUploading] = useState(false)
+    const [deletingId, setDeletingId] = useState(null)
+    const [deleteError, setDeleteError] = useState('')
     // Estado del formulario de color nuevo
     const [nuevoColorHex, setNuevoColorHex] = useState('#A8C8E8')
     const [nuevoColorNombre, setNuevoColorNombre] = useState('')
@@ -199,6 +201,25 @@ export default function AdminProducts() {
     const toggleActivo = async (id, activo) => {
         await supabase.from('productos').update({ activo: !activo }).eq('id', id)
         setProductos(prev => prev.map(p => p.id === id ? { ...p, activo: !activo } : p))
+    }
+
+    // ── Eliminar producto ──
+    // Un producto que ya figura en pedidos NO se puede borrar (FK protege el
+    // historial de ventas). En ese caso avisamos y sugerimos "Ocultar".
+    const handleDelete = async (p) => {
+        setDeleteError('')
+        if (!window.confirm(`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return
+        setDeletingId(p.id)
+        const { error } = await supabase.from('productos').delete().eq('id', p.id)
+        setDeletingId(null)
+        if (error) {
+            const enUso = error.code === '23503' || /foreign key|violates/i.test(error.message || '')
+            setDeleteError(enUso
+                ? `No se puede eliminar "${p.nombre}" porque forma parte de pedidos existentes. Usá "Ocultar" para sacarlo del catálogo sin perder el historial.`
+                : `No se pudo eliminar "${p.nombre}": ${error.message}`)
+            return
+        }
+        setProductos(prev => prev.filter(x => x.id !== p.id))
     }
 
     // ── Filtro de búsqueda ──
@@ -549,6 +570,19 @@ export default function AdminProducts() {
                 </p>
             )}
 
+            {/* Error al eliminar */}
+            {deleteError && (
+                <div style={{
+                    background: '#FFF5F5', border: '1px solid #FECACA', color: '#B91C1C',
+                    borderRadius: 'var(--radius-md)', padding: '10px 14px', fontSize: 13,
+                    marginBottom: 12, display: 'flex', alignItems: 'flex-start', gap: 8,
+                }}>
+                    <span>⚠️ {deleteError}</span>
+                    <button onClick={() => setDeleteError('')}
+                        style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#B91C1C', fontSize: 16, lineHeight: 1 }}>×</button>
+                </div>
+            )}
+
             <div className="table-wrap">
                 {loading ? <div className="spinner" /> : filtrados.length === 0 ? (
                     <div className="empty-state">
@@ -598,6 +632,14 @@ export default function AdminProducts() {
                                                 </button>
                                                 <button className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => toggleActivo(p.id, p.activo)}>
                                                     {p.activo ? <><HiEyeOff /> Ocultar</> : <><HiEye /> Mostrar</>}
+                                                </button>
+                                                <button
+                                                    className="btn btn-ghost"
+                                                    style={{ padding: '5px 10px', fontSize: 12, color: '#ef4444' }}
+                                                    onClick={() => handleDelete(p)}
+                                                    disabled={deletingId === p.id}
+                                                >
+                                                    <HiTrash /> {deletingId === p.id ? 'Borrando...' : 'Eliminar'}
                                                 </button>
                                             </div>
                                         </td>
