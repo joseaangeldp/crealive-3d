@@ -9,6 +9,7 @@ import TopNav from './components/TopNav'
 import BottomNav from './components/BottomNav'
 import Footer from './components/Footer'
 import WhatsAppFAB from './components/WhatsAppFAB'
+import BannerTemporada from './components/BannerTemporada'
 import ProtectedRoute from './components/ProtectedRoute'
 import SearchForm from './components/SearchForm'
 import ScrollToTop from './components/ScrollToTop'
@@ -101,6 +102,7 @@ export default function App() {
 
             <Footer />
             <BottomNav />
+            <BannerTemporada />
             <WhatsAppFAB />
         </>
     )
