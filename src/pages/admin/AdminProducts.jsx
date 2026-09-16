@@ -31,6 +31,8 @@ export default function AdminProducts() {
     const [saving, setSaving] = useState(false)
     const [saveError, setSaveError] = useState('')
     const [uploading, setUploading] = useState(false)
+    const [deletingId, setDeletingId] = useState(null)
+    const [deleteError, setDeleteError] = useState('')
     // Estado del formulario de color nuevo
     const [nuevoColorHex, setNuevoColorHex] = useState('#A8C8E8')
     const [nuevoColorNombre, setNuevoColorNombre] = useState('')
@@ -199,6 +201,28 @@ export default function AdminProducts() {
     const toggleActivo = async (id, activo) => {
         await supabase.from('productos').update({ activo: !activo }).eq('id', id)
         setProductos(prev => prev.map(p => p.id === id ? { ...p, activo: !activo } : p))
+    }
+
+    // ── Eliminar producto ──
+    // Un producto que ya figura en pedidos NO se puede borrar (la base protege
+    // el historial de ventas). En ese caso avisamos y sugerimos "Ocultar".
+    // Los mensajes son en español simple, pensados para uso no técnico: el
+    // detalle del error va a la consola, nunca a la pantalla.
+    const handleDelete = async (p) => {
+        setDeleteError('')
+        if (!window.confirm(`¿Seguro que querés eliminar "${p.nombre}"? No se puede deshacer.`)) return
+        setDeletingId(p.id)
+        const { error } = await supabase.from('productos').delete().eq('id', p.id)
+        setDeletingId(null)
+        if (error) {
+            console.error('Error al eliminar producto:', error)   // detalle técnico solo para depurar
+            const enUso = error.code === '23503' || /foreign key|violates/i.test(error.message || '')
+            setDeleteError(enUso
+                ? `No se puede eliminar "${p.nombre}" porque ya tiene pedidos hechos. Para sacarlo de la tienda, usá el botón "Ocultar".`
+                : `No pudimos eliminar "${p.nombre}". Probá de nuevo en un momento. Si sigue pasando, usá el botón "Ocultar".`)
+            return
+        }
+        setProductos(prev => prev.filter(x => x.id !== p.id))
     }
 
     // ── Filtro de búsqueda ──
@@ -549,6 +573,19 @@ export default function AdminProducts() {
                 </p>
             )}
 
+            {/* Error al eliminar */}
+            {deleteError && (
+                <div style={{
+                    background: '#FFF5F5', border: '1px solid #FECACA', color: '#B91C1C',
+                    borderRadius: 'var(--radius-md)', padding: '10px 14px', fontSize: 13,
+                    marginBottom: 12, display: 'flex', alignItems: 'flex-start', gap: 8,
+                }}>
+                    <span>⚠️ {deleteError}</span>
+                    <button onClick={() => setDeleteError('')}
+                        style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#B91C1C', fontSize: 16, lineHeight: 1 }}>×</button>
+                </div>
+            )}
+
             <div className="table-wrap">
                 {loading ? <div className="spinner" /> : filtrados.length === 0 ? (
                     <div className="empty-state">
@@ -598,6 +635,14 @@ export default function AdminProducts() {
                                                 </button>
                                                 <button className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => toggleActivo(p.id, p.activo)}>
                                                     {p.activo ? <><HiEyeOff /> Ocultar</> : <><HiEye /> Mostrar</>}
+                                                </button>
+                                                <button
+                                                    className="btn btn-ghost"
+                                                    style={{ padding: '5px 10px', fontSize: 12, color: '#ef4444' }}
+                                                    onClick={() => handleDelete(p)}
+                                                    disabled={deletingId === p.id}
+                                                >
+                                                    <HiTrash /> {deletingId === p.id ? 'Borrando...' : 'Eliminar'}
                                                 </button>
                                             </div>
                                         </td>
