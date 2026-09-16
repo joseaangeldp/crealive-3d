@@ -35,6 +35,12 @@ export const temaTemporada = {
     //   'halloween'→ calabaza
     animacion: 'beisbol',
 
+    // Sonido en sincronía con la animación. Debe existir en el registro
+    // SONIDOS de BannerTemporada.jsx (sintetizado con Web Audio, sin archivos).
+    // null = sin sonido. Actualmente: 'beisbol' (el "crack" del bate).
+    // El navegador solo lo reproduce tras la primera interacción del usuario.
+    sonido: 'beisbol',
+
     // Cuánto espera tras cargar la página antes de aparecer (ms).
     // No bloquea ni retrasa el contenido: solo demora su aparición.
     delayMs: 1500,
