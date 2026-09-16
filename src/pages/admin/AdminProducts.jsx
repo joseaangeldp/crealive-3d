@@ -204,19 +204,22 @@ export default function AdminProducts() {
     }
 
     // ── Eliminar producto ──
-    // Un producto que ya figura en pedidos NO se puede borrar (FK protege el
-    // historial de ventas). En ese caso avisamos y sugerimos "Ocultar".
+    // Un producto que ya figura en pedidos NO se puede borrar (la base protege
+    // el historial de ventas). En ese caso avisamos y sugerimos "Ocultar".
+    // Los mensajes son en español simple, pensados para uso no técnico: el
+    // detalle del error va a la consola, nunca a la pantalla.
     const handleDelete = async (p) => {
         setDeleteError('')
-        if (!window.confirm(`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return
+        if (!window.confirm(`¿Seguro que querés eliminar "${p.nombre}"? No se puede deshacer.`)) return
         setDeletingId(p.id)
         const { error } = await supabase.from('productos').delete().eq('id', p.id)
         setDeletingId(null)
         if (error) {
+            console.error('Error al eliminar producto:', error)   // detalle técnico solo para depurar
             const enUso = error.code === '23503' || /foreign key|violates/i.test(error.message || '')
             setDeleteError(enUso
-                ? `No se puede eliminar "${p.nombre}" porque forma parte de pedidos existentes. Usá "Ocultar" para sacarlo del catálogo sin perder el historial.`
-                : `No se pudo eliminar "${p.nombre}": ${error.message}`)
+                ? `No se puede eliminar "${p.nombre}" porque ya tiene pedidos hechos. Para sacarlo de la tienda, usá el botón "Ocultar".`
+                : `No pudimos eliminar "${p.nombre}". Probá de nuevo en un momento. Si sigue pasando, usá el botón "Ocultar".`)
             return
         }
         setProductos(prev => prev.filter(x => x.id !== p.id))
