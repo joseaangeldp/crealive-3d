@@ -19,7 +19,7 @@ export const temaTemporada = {
     // Id de la colección destino (tabla `colecciones` de Supabase).
     // Lo obtenés desde el panel Admin → Colecciones.
     // El clic navega a `/coleccion/<coleccionId>`.
-    coleccionId: 'PEGAR_ID_AQUI',
+    coleccionId: '5bc1e7a3-3b10-4765-85ed-0225cb204e7a',
 
     // Textos visibles.
     texto: {
