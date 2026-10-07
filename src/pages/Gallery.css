@@ -80,8 +80,10 @@
     color: var(--color-text-muted);
 }
 
-/* Lightbox */
-.lightbox {
+/* ─── Lightbox de la galería ───
+   Clases con prefijo propio (gallery-*) para NO chocar con el .lightbox
+   de ProductCustomizer.css, que es un overlay distinto y pisaba estas reglas. */
+.gallery-lightbox {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -89,17 +91,18 @@
     background: var(--color-white);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    width: auto;
     max-width: 94vw;
     max-height: 94vh;
     display: flex;
     flex-direction: column;
+    align-items: center;        /* evita que la etiqueta <img> se estire al ancho de la ficha */
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
     animation: modalIn 0.25s ease;
 }
 
-/* Imagen COMPLETA (sin recortar), lo más grande que entre en la pantalla */
-.lightbox-img {
+/* Imagen COMPLETA (sin recortar ni deformar), a su escala real,
+   lo más grande que entre en la pantalla. */
+.gallery-lightbox-img {
     display: block;
     width: auto;
     height: auto;
@@ -109,28 +112,58 @@
     background: var(--color-surface-2);
 }
 
-.lightbox-info {
+.gallery-lightbox-info {
     padding: 20px 24px 24px;
+    align-self: stretch;        /* la ficha de texto ocupa todo el ancho del modal */
     flex-shrink: 0;
 }
 
-.lightbox-original {
+.gallery-lightbox-original {
     display: inline-block;
     margin-top: 12px;
     font-size: 13px;
     font-weight: 600;
     color: var(--color-wine);
 }
-.lightbox-original:hover { text-decoration: underline; }
+.gallery-lightbox-original:hover { text-decoration: underline; }
 
-.lightbox-info h2 {
+.gallery-lightbox-info h2 {
     font-size: 20px;
     margin: 8px 0 6px;
 }
 
-.lightbox-info p {
+.gallery-lightbox-info p {
     font-size: 14px;
     color: var(--color-text-muted);
+}
+
+/* Botón de cerrar (✕) — sobre la esquina de la imagen */
+.gallery-lightbox .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.gallery-lightbox .modal-close:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 @media (max-width: 480px) {

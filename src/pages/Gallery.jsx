@@ -138,15 +138,15 @@ export default function Gallery() {
             {lightbox && (
                 <>
                     <div className="overlay" onClick={() => setLightbox(null)} style={{ zIndex: 500 }} />
-                    <div className="lightbox" style={{ zIndex: 501 }}>
+                    <div className="gallery-lightbox" style={{ zIndex: 501 }}>
                         <button className="modal-close" onClick={() => setLightbox(null)} aria-label="Cerrar">✕</button>
-                        <img src={lightbox.imagen_url} alt={lightbox.titulo} className="lightbox-img" decoding="async" onError={onImgError} />
-                        <div className="lightbox-info">
+                        <img src={lightbox.imagen_url} alt={lightbox.titulo} className="gallery-lightbox-img" decoding="async" onError={onImgError} />
+                        <div className="gallery-lightbox-info">
                             <span className="gallery-cat">{lightbox.categoria}</span>
                             <h2>{lightbox.titulo}</h2>
                             <p>{lightbox.descripcion}</p>
                             <a
-                                className="lightbox-original"
+                                className="gallery-lightbox-original"
                                 href={lightbox.imagen_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
