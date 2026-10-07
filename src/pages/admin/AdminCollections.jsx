@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabase'
 
 const EMPTY_FORM = {
     titulo: '', descripcion: '', imagen_url: '',
-    activo: true, orden: 0,
+    activo: true,
     productos_ids: [],   // UUIDs de productos asignados a esta colección
 }
 const BUCKET = 'colecciones'
@@ -50,7 +50,6 @@ export default function AdminCollections() {
             descripcion: c.descripcion || '',
             imagen_url: c.imagen_url || '',
             activo: c.activo,
-            orden: c.orden || 0,
             productos_ids: Array.isArray(c.productos_ids) ? c.productos_ids : [],
         })
         setEditItem(c.id); setShowForm(true)
@@ -94,12 +93,23 @@ export default function AdminCollections() {
     const handleSave = async e => {
         e.preventDefault()
         setSaving(true); setSaveError('')
+
+        // Orden automático: al ACTIVAR una colección (nueva activa, u oculta→visible)
+        // la mandamos al frente del carrusel dándole el `orden` más bajo.
+        // Si solo se edita una que ya estaba activa, conserva su posición.
+        const anterior = editItem ? colecciones.find(c => c.id === editItem) : null
+        const seActiva = form.activo && !anterior?.activo
+        const minOrden = colecciones.reduce((m, c) => Math.min(m, Number(c.orden) || 0), 0)
+        const orden = seActiva
+            ? minOrden - 1
+            : (anterior ? (anterior.orden ?? 0) : 0)
+
         const payload = {
             titulo: form.titulo,
             descripcion: form.descripcion,
             imagen_url: form.imagen_url,
             activo: form.activo,
-            orden: parseInt(form.orden) || 0,
+            orden,
             productos_ids: form.productos_ids || [],
         }
         const { error } = editItem
@@ -131,6 +141,9 @@ export default function AdminCollections() {
         ? productos.filter(p => p.nombre.toLowerCase().includes(searchProd.toLowerCase()))
         : productos
 
+    // Colecciones activas en el mismo orden del carrusel (para mostrar su posición)
+    const activas = colecciones.filter(c => c.activo)
+
     return (
         <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 12 }}>
@@ -153,15 +166,9 @@ export default function AdminCollections() {
                 <div className="card" style={{ padding: 24, marginBottom: 24 }}>
                     <h2 className="admin-form-title">{editItem ? 'Editar' : 'Nueva'} colección</h2>
                     <form className="admin-form" onSubmit={handleSave}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'end' }}>
-                            <div className="form-group">
-                                <label className="form-label">Título *</label>
-                                <input name="titulo" className="form-input" value={form.titulo} onChange={handleChange} required />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Orden</label>
-                                <input name="orden" type="number" min="0" className="form-input" style={{ width: 70 }} value={form.orden} onChange={handleChange} />
-                            </div>
+                        <div className="form-group">
+                            <label className="form-label">Título *</label>
+                            <input name="titulo" className="form-input" value={form.titulo} onChange={handleChange} required />
                         </div>
 
                         <div className="form-group">
@@ -268,10 +275,15 @@ export default function AdminCollections() {
                             </div>
                         </div>
 
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
-                            <input type="checkbox" name="activo" checked={form.activo} onChange={handleChange} />
-                            Mostrar en carrusel
-                        </label>
+                        <div>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
+                                <input type="checkbox" name="activo" checked={form.activo} onChange={handleChange} />
+                                Mostrar en carrusel
+                            </label>
+                            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '6px 0 0 26px' }}>
+                                Al activarla, esta colección pasa a mostrarse <strong>primera</strong> en el carrusel.
+                            </p>
+                        </div>
 
                         {saveError && (
                             <div style={{ background: '#FFF5F5', border: '1px solid #FECACA', color: '#B91C1C', borderRadius: 'var(--radius-md)', padding: '10px 14px', fontSize: 12, whiteSpace: 'pre-line' }}>
@@ -304,7 +316,9 @@ export default function AdminCollections() {
                         <tbody>
                             {colecciones.map(c => (
                                 <tr key={c.id}>
-                                    <td style={{ color: 'var(--color-text-muted)', fontSize: 12 }}>{c.orden}</td>
+                                    <td style={{ color: 'var(--color-text-muted)', fontSize: 12 }}>
+                                        {c.activo ? activas.findIndex(a => a.id === c.id) + 1 : '—'}
+                                    </td>
                                     <td>
                                         {c.imagen_url
                                             ? <img src={c.imagen_url} alt={c.titulo} style={{ width: 64, height: 40, objectFit: 'cover', borderRadius: 8 }} />
