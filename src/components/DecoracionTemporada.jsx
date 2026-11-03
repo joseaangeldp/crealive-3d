@@ -203,14 +203,20 @@ function useScrollRevealGlobal(activo, pathname) {
 }
 
 export default function DecoracionTemporada() {
-    const { tema, decoracion } = temaTemporada
+    const { tema, decoracion, rutasExcluidas } = temaTemporada
     const activa = tema === 'navidad'
     const reducido = prefiereMenosMovimiento()
     const { pathname } = useLocation()
 
-    useScrollRevealGlobal(activa && !!decoracion?.scrollReveal && !reducido, pathname)
+    // Mismas exclusiones que la notificación: nada de decoración en el panel
+    // admin ni en el flujo de compra (checkout). Reusa rutasExcluidas del config.
+    const rutaExcluida = (rutasExcluidas || []).some(
+        (r) => pathname === r || pathname.startsWith(`${r}/`),
+    )
 
-    if (!activa) return null
+    useScrollRevealGlobal(activa && !rutaExcluida && !!decoracion?.scrollReveal && !reducido, pathname)
+
+    if (!activa || rutaExcluida) return null
 
     return (
         <>
