@@ -32,6 +32,18 @@ export default function Gallery() {
 
     useEffect(() => { cargar() }, [cargar])
 
+    // Visor abierto: cerrar con Escape y bloquear el scroll del fondo.
+    useEffect(() => {
+        if (!lightbox) return
+        const onKey = (e) => { if (e.key === 'Escape') setLightbox(null) }
+        window.addEventListener('keydown', onKey)
+        document.body.style.overflow = 'hidden'
+        return () => {
+            window.removeEventListener('keydown', onKey)
+            document.body.style.overflow = ''
+        }
+    }, [lightbox])
+
     const filtrados = categoria === 'Todos'
         ? items
         : items.filter(i => i.categoria === categoria)
@@ -138,7 +150,13 @@ export default function Gallery() {
             {lightbox && (
                 <>
                     <div className="overlay" onClick={() => setLightbox(null)} style={{ zIndex: 500 }} />
-                    <div className="gallery-lightbox" style={{ zIndex: 501 }}>
+                    <div
+                        className="gallery-lightbox"
+                        style={{ zIndex: 501 }}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={lightbox.titulo}
+                    >
                         <button className="modal-close" onClick={() => setLightbox(null)} aria-label="Cerrar">✕</button>
                         <img src={lightbox.imagen_url} alt={lightbox.titulo} className="gallery-lightbox-img" decoding="async" onError={onImgError} />
                         <div className="gallery-lightbox-info">
