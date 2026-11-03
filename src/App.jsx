@@ -13,6 +13,11 @@ import BannerTemporada from './components/BannerTemporada'
 import ProtectedRoute from './components/ProtectedRoute'
 import SearchForm from './components/SearchForm'
 import ScrollToTop from './components/ScrollToTop'
+import { temaTemporada } from './config/tema-temporada'
+
+// Decoración navideña global (Parte 2): carga diferida y SOLO si el
+// tema está encendido, para que 'ninguno' no cargue ni un byte extra.
+const DecoracionTemporada = lazy(() => import('./components/DecoracionTemporada'))
 
 // Páginas cliente (carga diferida para rendimiento)
 const Home = lazy(() => import('./pages/Home'))
@@ -103,6 +108,11 @@ export default function App() {
             <Footer />
             <BottomNav />
             <BannerTemporada />
+            {temaTemporada.tema === 'navidad' && (
+                <Suspense fallback={null}>
+                    <DecoracionTemporada />
+                </Suspense>
+            )}
             <WhatsAppFAB />
         </>
     )
