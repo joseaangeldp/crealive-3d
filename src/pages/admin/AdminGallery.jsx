@@ -470,7 +470,7 @@ export default function AdminGallery() {
                         onClick={() => setPreview(null)}
                         style={{ zIndex: 500 }}
                     />
-                    <div className="lightbox" style={{ zIndex: 501 }}>
+                    <div className="gallery-lightbox" style={{ zIndex: 501 }}>
                         <button
                             className="modal-close"
                             onClick={() => setPreview(null)}
@@ -479,14 +479,14 @@ export default function AdminGallery() {
                         <img
                             src={preview.imagen_url}
                             alt={preview.titulo}
-                            className="lightbox-img"
+                            className="gallery-lightbox-img"
                         />
-                        <div className="lightbox-info">
+                        <div className="gallery-lightbox-info">
                             <span className="gallery-cat">{preview.categoria}</span>
                             <h2>{preview.titulo}</h2>
                             <p>{preview.descripcion}</p>
                             <a
-                                className="lightbox-original"
+                                className="gallery-lightbox-original"
                                 href={preview.imagen_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
