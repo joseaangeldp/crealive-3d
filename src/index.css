@@ -26,6 +26,11 @@
   --color-blue:     #8AC4DC;   /* azul claro del packaging */
   --color-pink:     #F5C6D8;   /* rosa pálido para fondos suaves */
 
+  /* Acentos navideños sobrios — SOLO los usa el tema 'navidad'.
+     Armonizan con --color-burgundy y el crema del fondo. */
+  --color-navidad-pino:   #234D38;   /* verde pino profundo */
+  --color-navidad-dorado: #C4A24C;   /* dorado apagado */
+
   /* Texto */
   --color-text:       #2C1A0E; /* marrón chocolate */
   --color-text-muted: #8C7B6E; /* marrón claro */
