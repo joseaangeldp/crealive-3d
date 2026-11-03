@@ -190,15 +190,30 @@
     46%      { opacity: 0.95; transform: scale(1.08); }
 }
 
-/* Navidad — copo girando (estructura lista) */
-.bt-copo {
-    transform-box: view-box;
-    transform-origin: 100px 80px;
-    animation: bt-copo 3s linear infinite;
+/* Navidad — copos de nieve cayendo (el color del trazo va por CSS,
+   no por atributo, para poder usar las custom properties). */
+.bt-snow-glow { opacity: 0.9; }
+
+.bt-flake {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform-box: fill-box;
+    transform-origin: center;
 }
-@keyframes bt-copo {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+.bt-flake--main { stroke: var(--color-blue); stroke-width: 3.2; }
+.bt-flake--a,
+.bt-flake--b   { stroke: rgba(255, 255, 255, 0.85); stroke-width: 2; }
+
+.bt-flake--main { animation: bt-fall 3.4s linear infinite; }
+.bt-flake--a    { animation: bt-fall 4.6s linear infinite; animation-delay: -1.3s; opacity: 0; }
+.bt-flake--b    { animation: bt-fall 5.6s linear infinite; animation-delay: -3.1s; opacity: 0; }
+
+@keyframes bt-fall {
+    0%   { transform: translateY(-74px) rotate(-18deg); opacity: 0; }
+    16%  { opacity: 1; }
+    84%  { opacity: 1; }
+    100% { transform: translateY(80px) rotate(26deg);   opacity: 0; }
 }
 
 /* Halloween — calabaza latiendo (estructura lista) */
@@ -230,9 +245,11 @@
     .banner-temporada__card,
     .banner-temporada__backdrop,
     .bt-bat, .bt-ball, .bt-impact, .bt-glow,
-    .bt-copo, .bt-calabaza {
+    .bt-flake, .bt-calabaza {
         animation: none !important;
     }
+    /* El copo principal queda quieto y centrado; los de fondo, ocultos. */
+    .bt-flake--main { opacity: 1; transform: none; }
     .bt-bat { transform: rotate(-8deg); }   /* bate en pose de contacto */
     .bt-impact { opacity: 0; }
     .bt-glow { opacity: 0.6; }

@@ -15,6 +15,26 @@ const STORAGE_PREFIX = 'crealive_promo_'
 const PERIODO_MS = 1800   // debe coincidir con la duración de las animaciones CSS
 const CONTACTO = 0.42     // fracción del ciclo en la que el bate golpea la pelota
 
+// Copo de nieve de 6 puntas centrado en (0,0), radio `r`.
+// El color y el grosor del trazo se definen por CSS (.bt-flake).
+function Copo({ r }) {
+    const brazo = r * 0.34   // largo de las ramitas
+    const altura = r * 0.60  // dónde nacen las ramitas sobre el eje
+    return (
+        <g>
+            {[0, 60, 120].map((a) => (
+                <g key={a} transform={`rotate(${a})`}>
+                    <line x1="0" y1={-r} x2="0" y2={r} />
+                    <line x1="0" y1={-altura} x2={-brazo} y2={-altura - brazo} />
+                    <line x1="0" y1={-altura} x2={brazo} y2={-altura - brazo} />
+                    <line x1="0" y1={altura} x2={-brazo} y2={altura + brazo} />
+                    <line x1="0" y1={altura} x2={brazo} y2={altura + brazo} />
+                </g>
+            ))}
+        </g>
+    )
+}
+
 // ── Registro de animaciones por tema ─────────────────────────
 // Para sumar un tema nuevo: agregá una entrada acá + su bloque CSS
 // en BannerTemporada.css. No se toca ningún otro componente.
@@ -70,11 +90,24 @@ const ANIMACIONES = {
     ),
     navidad: () => (
         <svg className="bt-scene" viewBox="0 0 200 160" aria-hidden="true">
-            <circle className="bt-glow" cx="100" cy="80" r="74" fill="rgba(138,196,220,0.25)" />
-            <g className="bt-copo" stroke="var(--color-blue)" strokeWidth="4" strokeLinecap="round">
-                <line x1="100" y1="42" x2="100" y2="118" />
-                <line x1="67" y1="61" x2="133" y2="99" />
-                <line x1="133" y1="61" x2="67" y2="99" />
+            <defs>
+                <radialGradient id="btSnowGlow" cx="0.5" cy="0.5" r="0.5">
+                    <stop offset="0" stopColor="rgba(138,196,220,0.38)" />
+                    <stop offset="1" stopColor="rgba(138,196,220,0)" />
+                </radialGradient>
+            </defs>
+            <circle className="bt-snow-glow" cx="100" cy="82" r="72" fill="url(#btSnowGlow)" />
+
+            {/* copos pequeños de fondo (profundidad) */}
+            <g transform="translate(60,70)">
+                <g className="bt-flake bt-flake--a"><Copo r={9} /></g>
+            </g>
+            <g transform="translate(142,78)">
+                <g className="bt-flake bt-flake--b"><Copo r={7} /></g>
+            </g>
+            {/* copo principal cayendo */}
+            <g transform="translate(100,74)">
+                <g className="bt-flake bt-flake--main"><Copo r={20} /></g>
             </g>
         </svg>
     ),
@@ -153,7 +186,8 @@ export default function BannerTemporada() {
     let yaCerrada = false
     try { yaCerrada = localStorage.getItem(storageKey) === 'cerrada' } catch { /* localStorage no disponible */ }
 
-    const permitida = activo && !rutaExcluida && !yaEnColeccion && !yaCerrada
+    // tema 'ninguno' apaga la notificación (interruptor único con la decoración).
+    const permitida = activo && tema !== 'ninguno' && !rutaExcluida && !yaEnColeccion && !yaCerrada
 
     // ── Audio ────────────────────────────────────────────────
     const getCtx = useCallback(() => {
